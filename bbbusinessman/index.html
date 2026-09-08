@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bloxburg Business Manager</title>
 
-    <link rel="shortcut icon" href="/media/100006.png" type="image/x-icon">
+    <link rel="shortcut icon" href="https://cdn.dummtoby.network/assets/100006.png" type="image/x-icon">
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -19,7 +19,7 @@
         }
 
         body {
-            background: #DCDCDC url('https://cdn.ecxogames.ca/ecxogames/assets/794037.png') no-repeat center center / cover;
+            background: #DCDCDC url('https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png') no-repeat center center / cover;
             color: black;
             display: flex;
             flex-direction: column;
@@ -4409,8 +4409,17 @@
 
     <script>
         // ===== PROFILE SYSTEM =====
-        const API_BASE = 'https://api.shawnyxx.dev';
+        const API_BASE = 'https://api.louxav.com';
         const DB_PARAMS = 'db=techtoby&table=sessions';
+
+        async function apiFetch(url, options) {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                const error = await response.clone().json().catch(() => ({}));
+                throw new Error(error.error || error.message || `Cloud request failed (${response.status})`);
+            }
+            return response;
+        }
 
         // Roblox-safe words for session codes
         const SAFE_WORDS = [
@@ -4457,21 +4466,13 @@
         }
 
         async function uploadToCDN(file) {
-            const id = Math.floor(100000 + Math.random() * 900000);
-            const ext = file.name.split('.').pop() || 'png';
-            const filename = `${id}.${ext}`;
-            const resp = await fetch(`${API_BASE}/cdn/techtoby/assets/${filename}`, {
+            const extension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'bin';
+            const resp = await apiFetch(`${API_BASE}/assets?cdn=techtoby&extension=${encodeURIComponent(extension)}`, {
                 method: 'POST',
                 body: file,
                 headers: { 'Content-Type': file.type || 'application/octet-stream' }
             });
             const result = await resp.json();
-            if (!result.success) throw new Error(result.message || 'Upload failed');
-            await fetch(`${API_BASE}/db?db=techtoby&table=assets`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, url: result.url })
-            });
             return result.url;
         }
 
@@ -4734,12 +4735,9 @@
 
             setSyncStatus('syncing');
 
-            // Bootstrap: ensure sessions table exists
-            await fetch(`${API_BASE}/db?${DB_PARAMS}&action=create-table`).catch(() => {});
-
             // Create on the cloud
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}`, {
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -4784,7 +4782,7 @@
             const shuffled = [...SAFE_WORDS].sort(() => Math.random() - 0.5);
             for (const word of shuffled.slice(0, 20)) {
                 try {
-                    const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${word}`);
+                    const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${word}`);
                     const data = await resp.json();
                     if (!data || !data.id) return word;
                 } catch (e) {
@@ -4845,7 +4843,7 @@
                     return;
                 }
                 try {
-                    const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`);
+                    const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`);
                     const data = await resp.json();
                     if (data && data.id) {
                         document.getElementById('joinPreviewBusiness').textContent = data.business;
@@ -4873,7 +4871,7 @@
 
             try {
                 setSyncStatus('syncing');
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`);
                 const session = await resp.json();
 
                 if (!session || !session.id) {
@@ -4906,7 +4904,7 @@
                 const shortB64 = myB64.substring(0, 50000);
 
                 currentCollabs.push(shortB64);
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${code}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ collaborators: currentCollabs.join(',') })
@@ -4962,7 +4960,7 @@
             if (profile.isOwner && profile.sessionId) {
                 // Delete from cloud
                 try {
-                    await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
+                    await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
                 } catch (e) {}
             }
 
@@ -5075,7 +5073,7 @@
             if (!profile.sessionId) { el.innerHTML = '<div style="font-size:12px;color:rgba(0,0,0,0.4);">No session.</div>'; return; }
 
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
                 if (!session) { el.innerHTML = '<div style="font-size:12px;color:rgba(0,0,0,0.4);">Session not found.</div>'; return; }
 
@@ -5134,7 +5132,7 @@
             if (!profile || !profile.sessionId) return;
 
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
                 const collabs = session.collaborators ? session.collaborators.split(',').filter(Boolean) : [];
                 collabs.splice(index, 1);
@@ -5153,7 +5151,7 @@
 
                 const memB64 = btoa(unescape(encodeURIComponent(JSON.stringify(mem))));
 
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ collaborators: collabs.join(','), memory: memB64 })
@@ -5171,7 +5169,7 @@
             if (!confirm('Kick all collaborators?')) return;
 
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
 
                 // Add all non-owner members to kicked list
@@ -5195,7 +5193,7 @@
 
                 const memB64 = btoa(unescape(encodeURIComponent(JSON.stringify(mem))));
 
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ collaborators: '', memory: memB64 })
@@ -5222,11 +5220,11 @@
 
             try {
                 // Get current data
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
 
                 // Create new entry
-                await fetch(`${API_BASE}/db?${DB_PARAMS}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5241,7 +5239,7 @@
                 });
 
                 // Delete old entry
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
 
                 profile.sessionId = newCode;
                 saveProfiles();
@@ -5262,16 +5260,16 @@
 
             try {
                 // Check if taken
-                const checkResp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${customCode}`);
+                const checkResp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${customCode}`);
                 const existing = await checkResp.json();
                 if (existing && existing.id) return alert('This code is already taken.');
 
                 // Get current data
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
 
                 // Create new entry
-                await fetch(`${API_BASE}/db?${DB_PARAMS}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5286,7 +5284,7 @@
                 });
 
                 // Delete old entry
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, { method: 'DELETE' });
 
                 profile.sessionId = customCode;
                 saveProfiles();
@@ -5305,7 +5303,7 @@
             profile.max = max;
             saveProfiles();
             try {
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ max })
@@ -5350,7 +5348,7 @@
                     return;
                 }
 
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: compressed })
@@ -5369,7 +5367,7 @@
             if (!profile || profile.type !== 'shared' || !profile.sessionId) return;
 
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
 
                 // Check if session was deleted
@@ -5511,7 +5509,7 @@
             };
 
             try {
-                const resp = await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const resp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
                 const session = await resp.json();
                 if (!session) return;
 
@@ -5542,7 +5540,7 @@
                 });
 
                 const memB64 = btoa(unescape(encodeURIComponent(JSON.stringify(mem))));
-                await fetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
+                await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ memory: memB64 })

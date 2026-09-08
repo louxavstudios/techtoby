@@ -3,30 +3,30 @@
         {
             "icon": "👋",
             "title": "Welcome to Techtoby Corp",
-            "image": "https://cdn.shawnyxx.dev/fileshare/techtoby-desktop.png",
+            "image": "https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/techtoby-desktop.png",
             "description": "Your all-in-one toolkit for Welcome to Bloxburg. Manage businesses, create whiteboard decals, build family trees, and more — all from one place."
         },
         {
             "icon": "🖥️",
             "title": "Your Desktop",
-            "video": "https://cdn.shawnyxx.dev/fileshare/techtoby-desktop.mp4",
+            "video": "https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/techtoby-desktop.mp4",
             "description": "The home screen works like a real desktop. Click any app icon to open it. Right-click the desktop for options like customizing the layout."
         },
         {
             "icon": "📦",
-            "video": "https://cdn.shawnyxx.dev/fileshare/techtoby-apps-and-tools.mp4",
+            "video": "https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/techtoby-apps-and-tools.mp4",
             "title": "Apps & Tools",
             "description": "Each app is purpose-built for Bloxburg players. From the Business Manager to the Whiteboard, everything is designed to help you plan, organize, and create."
         },
         {
             "icon": "👤",
-            "video": "https://cdn.shawnyxx.dev/fileshare/techtoby-profiles.mp4",
+            "video": "https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/techtoby-profiles.mp4",
             "title": "Profiles",
             "description": "Head to Settings to create player profiles. Each profile stores its own data, so you can easily switch between different Bloxburg accounts or save files."
         },
         {
             "icon": "💾",
-            "video": "https://cdn.shawnyxx.dev/fileshare/techtoby-data-and-settings.mp4",
+            "video": "https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/techtoby-data-and-settings.mp4",
             "title": "Your Data, Your Control",
             "description": "All your data is stored locally in your browser. Use Settings to export or import your data if you want to back it up or transfer it to another device."
         }

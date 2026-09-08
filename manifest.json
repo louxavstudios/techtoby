@@ -13,7 +13,7 @@
             "description": "Draw 2D top-down floor plans of your builds with walls, doors, windows, roofs and furniture across multiple floors!",
             "author": "dummtoby",
             "path": "floorplanner/",
-            "icon": "media/100011.png"
+            "icon": "https://cdn.dummtoby.network/assets/100011.png"
         },
         {
             "name": "bbcomputer",
@@ -22,7 +22,7 @@
             "description": "Design nice computer desktop decals for your Bloxburg builds!",
             "author": "dummtoby",
             "path": "bbcomputer/",
-            "icon": "media/100003.png"
+            "icon": "https://cdn.dummtoby.network/assets/100003.png"
         },
         {
             "name": "bbfamtree",
@@ -31,7 +31,7 @@
             "description": "Generate a family tree for your Bloxburg builds!",
             "author": "dummtoby",
             "path": "bbfamtree/",
-            "icon": "media/100009.png"
+            "icon": "https://cdn.dummtoby.network/assets/100009.png"
         },
         {
             "name": "bbmural",
@@ -40,7 +40,7 @@
             "description": "Generate a mural for your Bloxburg builds!",
             "author": "dummtoby",
             "path": "bbmural/",
-            "icon": "media/100010.png"
+            "icon": "https://cdn.dummtoby.network/assets/100010.png"
         },
         {
             "name": "bbbusinessman",
@@ -49,7 +49,7 @@
             "description": "Manage your Bloxburg businesses with permission trees and salary generation!",
             "author": "dummtoby",
             "path": "bbbusinessman/",
-            "icon": "media/100004.png"
+            "icon": "https://cdn.dummtoby.network/assets/100004.png"
         },
         {
             "name": "bbwhiteboard",
@@ -58,7 +58,7 @@
             "description": "Create handwritten whiteboard decals for your Bloxburg builds!",
             "author": "dummtoby",
             "path": "bbwhiteboard/",
-            "icon": "media/100007.png"
+            "icon": "https://cdn.dummtoby.network/assets/100007.png"
         },
         {
             "name": "bsecsign",
@@ -67,7 +67,7 @@
             "description": "Turn text or an image into a buildable shape chart of rectangles and wedges for 3D Bloxburg signs!",
             "author": "dummtoby",
             "path": "bsecsign/",
-            "icon": "media/100012.png"
+            "icon": "https://cdn.dummtoby.network/assets/100012.png"
         },
         {
             "name": "settings",
@@ -76,7 +76,7 @@
             "description": "Manage profiles, import/export data, and configure site settings.",
             "author": "dummtoby",
             "path": "settings/",
-            "icon": "media/100008.png"
+            "icon": "https://cdn.dummtoby.network/assets/100008.png"
         }
     ]
 }
