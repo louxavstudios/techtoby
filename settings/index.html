@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="../account.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings — Techtoby Corp</title>
@@ -216,6 +217,123 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+
+        /* ===== Account ===== */
+        #accountSettings { overflow: visible; }
+        .AccountSignedInRow {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+        #accountIdentity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 150px;
+            font-size: 15px;
+            font-weight: 600;
+            color: rgba(0,0,0,0.82);
+        }
+        #accountIdentity img {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.7);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+        }
+        #accountSignedIn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+        #accountSignedInRow[hidden], #accountSignedIn[hidden], #accountForm[hidden] { display: none !important; }
+        .AccountAuthTabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            width: min(320px, 100%);
+            padding: 4px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.055);
+        }
+        .AccountAuthTab {
+            border: 0;
+            border-radius: 9px;
+            padding: 9px 14px;
+            background: transparent;
+            color: rgba(0,0,0,0.52);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .AccountAuthTab.active {
+            color: rgba(0,0,0,0.82);
+            background: rgba(255,255,255,0.72);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .AccountAuthViewport { overflow: hidden; }
+        .AccountAuthTrack {
+            display: flex;
+            width: 200%;
+            transition: transform 220ms ease;
+        }
+        .AccountAuthTrack.signup { transform: translateX(-50%); }
+        .AccountAuthCard {
+            width: 50%;
+            flex: 0 0 50%;
+            padding: 4px 2px 2px;
+            box-sizing: border-box;
+        }
+        .AccountAuthCardFields {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 10px;
+            align-items: end;
+        }
+        .AccountUsernameField { position: relative; }
+        #accountSuggestions {
+            position: absolute;
+            z-index: 30;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            display: none;
+            max-height: 190px;
+            overflow-y: auto;
+            padding: 5px;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 10px;
+            background: rgba(250,250,252,0.98);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.16);
+            backdrop-filter: blur(16px);
+        }
+        #accountSuggestions.open { display: grid; gap: 2px; }
+        .AccountSuggestion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            padding: 7px 9px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: rgba(0,0,0,0.78);
+            font: inherit;
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .AccountSuggestion:hover, .AccountSuggestion:focus { background: rgba(99,102,241,0.1); outline: none; }
+        .AccountSuggestionDisplay { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .AccountSuggestionUsername { color: rgba(0,0,0,0.45); white-space: nowrap; }
+        #accountLookupStatus { min-height: 16px; font-size: 11px; color: rgba(0,0,0,0.45); }
 
         /* ===== Code Block (for compressed string) ===== */
         .CodeBlock {
@@ -645,6 +763,9 @@
             .InputRow {
                 flex-direction: column;
             }
+            .AccountSignedInRow, .AccountAuthCardFields { align-items: stretch; grid-template-columns: 1fr; }
+            .AccountSignedInRow { flex-direction: column; }
+            #accountSignedIn { justify-content: flex-start; }
             .UpdateCard {
                 padding: 14px;
             }
@@ -684,9 +805,9 @@
                 <span class="material-symbols-outlined" style="font-size: 22px;">settings</span>
                 Settings
             </div>
-            <div class="SidebarTab active" data-page="profiles" onclick="switchPage('profiles')">
+            <div class="SidebarTab active" data-page="account" onclick="switchPage('account')">
                 <span class="material-symbols-outlined" style="font-size: 18px;">person</span>
-                Profiles
+                Account
             </div>
             <div class="SidebarTab" data-page="data" onclick="switchPage('data')">
                 <span class="material-symbols-outlined" style="font-size: 18px;">database</span>
@@ -696,14 +817,6 @@
                 <span class="material-symbols-outlined" style="font-size: 18px;">update</span>
                 Updates
             </div>
-            <div class="SidebarTab" data-page="apps" onclick="switchPage('apps')">
-                <span class="material-symbols-outlined" style="font-size: 18px;">apps</span>
-                Apps &amp; Tools
-            </div>
-            <div class="SidebarTab" data-page="desktop" onclick="switchPage('desktop')">
-                <span class="material-symbols-outlined" style="font-size: 18px;">desktop_windows</span>
-                Desktop App
-            </div>
             <div class="SidebarTab" data-page="advanced" onclick="switchPage('advanced')">
                 <span class="material-symbols-outlined" style="font-size: 18px;">code</span>
                 Advanced
@@ -712,13 +825,14 @@
 
         <div class="ContentArea">
             <!-- Profiles Page -->
-            <div class="page active" id="page-profiles">
-                <div class="ContentTitle">Profiles</div>
-                <div class="ContentDesc">Create and switch between player profiles. Each profile stores its own separate data across all apps on the site.</div>
+            <div class="page active" id="page-account">
+                <div class="ContentTitle">Account</div>
+                <div class="SettingsCard" id="accountSettings"></div>
+                <div class="ContentDesc">Your Techtoby account stores your app data across devices.</div>
 
-                <div id="activeProfileBanner" style="display: none;"></div>
 
-                <div class="ProfileGrid" id="profileGrid"></div>
+
+
             </div>
 
             <!-- Import / Export Page -->
@@ -733,7 +847,7 @@
                         <span class="material-symbols-outlined">download</span>
                         Export Data
                     </div>
-                    <div class="SettingsCardDesc">Download all localStorage data for the current profile as a JSON file, or copy it as a compressed string.</div>
+                    <div class="SettingsCardDesc">Download all localStorage data for your account as a JSON file, or copy it as a compressed string.</div>
                     <div class="SettingsCardActions">
                         <button class="GTextBtn primary" onclick="exportAsJSON()">
                             <span class="material-symbols-outlined">description</span>
@@ -755,7 +869,7 @@
                         <span class="material-symbols-outlined">upload</span>
                         Import Data
                     </div>
-                    <div class="SettingsCardDesc">Restore data from a JSON file or paste a compressed string. This will <strong>overwrite</strong> all current data for the active profile.</div>
+                    <div class="SettingsCardDesc">Restore data from a JSON file or paste a compressed string. This will <strong>overwrite</strong> all current data for your account.</div>
                     <div class="SettingsCardActions">
                         <button class="GTextBtn primary" onclick="document.getElementById('importFileInput').click()">
                             <span class="material-symbols-outlined">upload_file</span>
@@ -787,7 +901,7 @@
                         <span class="material-symbols-outlined" style="color: rgba(239,68,68,0.7);">delete_forever</span>
                         Danger Zone
                     </div>
-                    <div class="SettingsCardDesc">Permanently erase all site data for the current profile. This cannot be undone.</div>
+                    <div class="SettingsCardDesc">Permanently erase all site data for your account. This cannot be undone.</div>
                     <div class="SettingsCardActions">
                         <button class="GTextBtn danger" onclick="clearAllData()">
                             <span class="material-symbols-outlined">delete</span>
@@ -813,32 +927,6 @@
                         <span class="material-symbols-outlined">expand_more</span>
                         Load More
                     </button>
-                </div>
-            </div>
-
-            <!-- Apps & Tools Page -->
-            <div class="page" id="page-apps">
-                <div class="ContentTitle">Apps &amp; Tools</div>
-                <div class="ContentDesc">Download Techtoby apps and tools. Each download links to the latest GitHub release.</div>
-
-                <div id="appsContainer" style="display:flex;flex-direction:column;gap:16px;">
-                    <div class="EmptyState" id="appsLoading">
-                        <span class="material-symbols-outlined">hourglass_top</span>
-                        <div>Loading apps...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Desktop App Page -->
-            <div class="page" id="page-desktop">
-                <div class="ContentTitle">Desktop App</div>
-                <div class="ContentDesc">Download the latest version of the Techtoby desktop app for your platform.</div>
-
-                <div id="desktopRelease">
-                    <div class="EmptyState" id="desktopLoading">
-                        <span class="material-symbols-outlined">hourglass_top</span>
-                        <div>Loading latest release...</div>
-                    </div>
                 </div>
             </div>
 
@@ -877,89 +965,10 @@
         </div>
     </div>
 
-    <!-- Profile Edit Modal -->
-    <div class="ModalOverlay" id="profileEditModal" onclick="if(event.target===this)closeModal()">
-        <div class="ModalContent">
-            <div class="ModalTitle">
-                <span id="profileModalTitle">Create Profile</span>
-                <button class="ModalClose" onclick="closeModal()">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-
-            <div id="profileAvatarPreview" class="AvatarPreviewPlaceholder" onclick="document.getElementById('profileAvatarFile').click()" style="cursor:pointer;">
-                <span class="material-symbols-outlined" style="font-size: 32px;">add_a_photo</span>
-            </div>
-
-            <div class="form-group">
-                <label>Profile Picture URL</label>
-                <div class="InputRow">
-                    <div class="form-group" style="flex: 1;">
-                        <input type="text" id="profileAvatarUrl" placeholder="Paste image URL..." oninput="previewProfileAvatar()">
-                    </div>
-                    <button class="GTextBtn" onclick="document.getElementById('profileAvatarFile').click()" style="height: 38px; align-self: flex-end;">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">upload_file</span>
-                    </button>
-                    <input type="file" id="profileAvatarFile" accept="image/*" style="display:none;" onchange="handleProfileAvatarFile(event)">
-                </div>
-            </div>
-
-            <div class="InputRow">
-                <div class="form-group" style="flex: 1;">
-                    <label>Display Name</label>
-                    <input type="text" id="profileName" placeholder="e.g. John">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Roblox Username</label>
-                    <input type="text" id="profileUsername" placeholder="e.g. JohnSmith123">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Roblox Profile URL</label>
-                <input type="text" id="profileUrl" placeholder="e.g. https://www.roblox.com/users/12345/profile">
-            </div>
-
-            <div class="form-group">
-                <label>Description</label>
-                <textarea id="profileDescription" placeholder="A short description about this profile..." rows="3"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Businesses (comma-separated)</label>
-                <input type="text" id="profileBusinesses" placeholder="e.g. Restaurant, Cafe, Hotel">
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
-                <button class="GTextBtn" onclick="closeModal()">Cancel</button>
-                <button class="GTextBtn primary" onclick="saveProfile()">
-                    <span class="material-symbols-outlined">check</span>
-                    Save
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast -->
     <div class="Toast" id="toast"></div>
 
     <script>
-        // ===== CONSTANTS =====
-        const PROFILES_KEY = 'ttcProfiles';          // Array of profile metadata
-        const ACTIVE_PROFILE_KEY = 'ttcActiveProfile'; // ID of active profile
-        const PROFILE_DATA_PREFIX = 'ttcData_';      // Prefix for profile data snapshots
-
-        // All known localStorage keys used by the site (that belong to profile data)
-        const SITE_DATA_KEYS = [
-            'bbActivePage', 'bbBusinessPermissions', 'bbSalaryMode',
-            'bbBusinessJobs', 'bbBudget', 'bbHoursPerDay', 'bbDays',
-            'bbPermLabels', 'bbRoleLabels', 'bbCustomRanges',
-            'bbBusinessPresets', 'bbBusinessLabels', 'bbBusinessEmployees',
-            'bbWorkdayRecords', 'bbFinanceRecords', 'bbPartnerships',
-            'bbInventoryItems', 'bbInventories', 'bbOrders', 'bbWhiteboards',
-            'itemPositions', 'placeAnywhere', 'desktopItemOrder'
-        ];
-
         // ===== PAGE SWITCHING =====
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -975,8 +984,6 @@
             });
             if (pageId === 'data') updateDataSizeInfo();
             if (pageId === 'updates' && !commitsLoaded) fetchCommits();
-            if (pageId === 'apps' && !appsLoaded) loadApps();
-            if (pageId === 'desktop') loadDesktopRelease();
             if (pageId === 'advanced') initAdvancedPage();
         }
 
@@ -1008,346 +1015,15 @@
             el.innerHTML = '<span class="material-symbols-outlined">storage</span> Total data: ' + sizeKB + ' KB (' + localStorage.length + ' keys)';
         }
 
-        // ===== PROFILES =====
-        function getProfiles() {
-            try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || []; }
-            catch { return []; }
-        }
-
-        function saveProfiles(profiles) {
-            localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
-        }
-
-        function getActiveProfileId() {
-            return localStorage.getItem(ACTIVE_PROFILE_KEY);
-        }
-
-        function setActiveProfileId(id) {
-            localStorage.setItem(ACTIVE_PROFILE_KEY, id);
-        }
-
-        // Collect current site data into a snapshot object
-        function collectSiteData() {
-            const data = {};
-            SITE_DATA_KEYS.forEach(key => {
-                const val = localStorage.getItem(key);
-                if (val !== null) data[key] = val;
-            });
-            return data;
-        }
-
-        // Restore a snapshot into localStorage (site data keys only)
-        function applySiteData(data) {
-            // Clear existing site data keys
-            SITE_DATA_KEYS.forEach(key => localStorage.removeItem(key));
-            // Apply new data
-            for (const key in data) {
-                if (SITE_DATA_KEYS.includes(key)) {
-                    localStorage.setItem(key, data[key]);
-                }
-            }
-        }
-
-        // Save current site data to the active profile's storage slot
-        function saveCurrentProfileData() {
-            const activeId = getActiveProfileId();
-            if (!activeId) return;
-            const data = collectSiteData();
-            localStorage.setItem(PROFILE_DATA_PREFIX + activeId, JSON.stringify(data));
-        }
-
-        // Load a profile's data into the live localStorage keys
-        function loadProfileData(profileId) {
-            const raw = localStorage.getItem(PROFILE_DATA_PREFIX + profileId);
-            const data = raw ? JSON.parse(raw) : {};
-            applySiteData(data);
-        }
-
-        function switchProfile(profileId) {
-            const currentId = getActiveProfileId();
-            if (currentId === String(profileId)) return;
-
-            // Save current profile's data before switching
-            if (currentId) saveCurrentProfileData();
-
-            // Load new profile's data
-            loadProfileData(profileId);
-            setActiveProfileId(String(profileId));
-
-            renderProfiles();
-            showToast('Switched profile', 'swap_horiz');
-        }
-
-        let editingProfileId = null;
-
-        function openProfileModal(id) {
-            editingProfileId = id || null;
-            document.getElementById('profileModalTitle').textContent = editingProfileId ? 'Edit Profile' : 'Create Profile';
-
-            if (editingProfileId) {
-                const profiles = getProfiles();
-                const p = profiles.find(pr => String(pr.id) === String(editingProfileId));
-                if (p) {
-                    document.getElementById('profileAvatarUrl').value = p.avatarUrl || '';
-                    document.getElementById('profileName').value = p.name || '';
-                    document.getElementById('profileUsername').value = p.username || '';
-                    document.getElementById('profileUrl').value = p.profileUrl || '';
-                    document.getElementById('profileDescription').value = p.description || '';
-                    document.getElementById('profileBusinesses').value = (p.businesses || []).join(', ');
-                    previewProfileAvatar();
-                }
-            } else {
-                document.getElementById('profileAvatarUrl').value = '';
-                document.getElementById('profileName').value = '';
-                document.getElementById('profileUsername').value = '';
-                document.getElementById('profileUrl').value = '';
-                document.getElementById('profileDescription').value = '';
-                document.getElementById('profileBusinesses').value = '';
-                resetProfileAvatarPreview();
-            }
-
-            document.getElementById('profileEditModal').classList.add('open');
-        }
-
-        function closeModal() {
-            document.getElementById('profileEditModal').classList.remove('open');
-        }
-
-        function previewProfileAvatar() {
-            const url = document.getElementById('profileAvatarUrl').value.trim();
-            const preview = document.getElementById('profileAvatarPreview');
-            if (url) {
-                const img = document.createElement('img');
-                img.src = url;
-                img.id = 'profileAvatarPreview';
-                img.className = 'AvatarPreviewLarge';
-                img.onerror = () => resetProfileAvatarPreview();
-                preview.replaceWith(img);
-            } else {
-                resetProfileAvatarPreview();
-            }
-        }
-
-        function resetProfileAvatarPreview() {
-            const existing = document.getElementById('profileAvatarPreview');
-            const placeholder = document.createElement('div');
-            placeholder.id = 'profileAvatarPreview';
-            placeholder.className = 'AvatarPreviewPlaceholder';
-            placeholder.onclick = () => document.getElementById('profileAvatarFile').click();
-            placeholder.style.cursor = 'pointer';
-            placeholder.innerHTML = '<span class="material-symbols-outlined" style="font-size: 32px;">add_a_photo</span>';
-            existing.replaceWith(placeholder);
-        }
-
-        function handleProfileAvatarFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('profileAvatarUrl').value = e.target.result;
-                previewProfileAvatar();
-            };
-            reader.readAsDataURL(file);
-            event.target.value = '';
-        }
-
-        function saveProfile() {
-            const name = document.getElementById('profileName').value.trim();
-            const username = document.getElementById('profileUsername').value.trim();
-            if (!name && !username) {
-                document.getElementById('profileName').focus();
-                return;
-            }
-
-            const profiles = getProfiles();
-            const profileData = {
-                id: editingProfileId || Date.now(),
-                name: name || 'Unnamed',
-                username,
-                avatarUrl: document.getElementById('profileAvatarUrl').value.trim(),
-                profileUrl: document.getElementById('profileUrl').value.trim(),
-                description: document.getElementById('profileDescription').value.trim(),
-                businesses: document.getElementById('profileBusinesses').value.split(',').map(s => s.trim()).filter(Boolean)
-            };
-
-            if (editingProfileId) {
-                const idx = profiles.findIndex(p => String(p.id) === String(editingProfileId));
-                if (idx >= 0) profiles[idx] = profileData;
-            } else {
-                profiles.push(profileData);
-                // If this is the first profile, or no active profile, make it active
-                if (!getActiveProfileId()) {
-                    setActiveProfileId(String(profileData.id));
-                    // Save current data as this profile's data
-                    saveCurrentProfileData();
-                }
-            }
-
-            saveProfiles(profiles);
-            closeModal();
-            renderProfiles();
-            showToast(editingProfileId ? 'Profile updated' : 'Profile created', 'check');
-        }
-
-        function deleteProfile(id) {
-            if (!confirm('Delete this profile and all its data? This cannot be undone.')) return;
-            let profiles = getProfiles();
-            profiles = profiles.filter(p => String(p.id) !== String(id));
-            saveProfiles(profiles);
-
-            // Remove profile data
-            localStorage.removeItem(PROFILE_DATA_PREFIX + id);
-
-            // If we deleted the active profile, switch to another or clear
-            if (getActiveProfileId() === String(id)) {
-                if (profiles.length > 0) {
-                    switchProfile(profiles[0].id);
-                } else {
-                    localStorage.removeItem(ACTIVE_PROFILE_KEY);
-                }
-            }
-
-            renderProfiles();
-            showToast('Profile deleted', 'delete');
-        }
-
-        function renderProfiles() {
-            const grid = document.getElementById('profileGrid');
-            const banner = document.getElementById('activeProfileBanner');
-            const profiles = getProfiles();
-            const activeId = getActiveProfileId();
-
-            grid.innerHTML = '';
-
-            // Active profile banner
-            const activeProfile = profiles.find(p => String(p.id) === String(activeId));
-            if (activeProfile) {
-                banner.style.display = '';
-                banner.className = 'SettingsCard';
-                banner.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        ${activeProfile.avatarUrl
-                            ? '<img src="' + escapeHtml(activeProfile.avatarUrl) + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.6);">'
-                            : '<div style="width:40px;height:40px;border-radius:50%;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;"><span class="material-symbols-outlined" style="color:rgba(99,102,241,0.6);">person</span></div>'
-                        }
-                        <div>
-                            <div style="font-weight:600;font-size:14px;color:rgba(0,0,0,0.85);">Active: ${escapeHtml(activeProfile.name)}</div>
-                            <div style="font-size:12px;color:rgba(0,0,0,0.45);">${activeProfile.username ? '@' + escapeHtml(activeProfile.username) : 'No username'}</div>
-                        </div>
-                        <span class="ProfileBadge" style="margin-left: auto;">Active</span>
-                    </div>
-                `;
-            } else {
-                banner.style.display = 'none';
-            }
-
-            profiles.forEach(p => {
-                const isActive = String(p.id) === String(activeId);
-                const card = document.createElement('div');
-                card.className = 'ProfileCard' + (isActive ? ' active-profile' : '');
-                card.onclick = () => { if (!isActive) switchProfile(p.id); };
-
-                // Actions
-                const actions = document.createElement('div');
-                actions.className = 'ProfileCardActions';
-                const editBtn = document.createElement('button');
-                editBtn.className = 'ProfileCardBtn';
-                editBtn.title = 'Edit';
-                editBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px;">edit</span>';
-                editBtn.onclick = (e) => { e.stopPropagation(); openProfileModal(p.id); };
-                const delBtn = document.createElement('button');
-                delBtn.className = 'ProfileCardBtn danger';
-                delBtn.title = 'Delete';
-                delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,0.7);">close</span>';
-                delBtn.onclick = (e) => { e.stopPropagation(); deleteProfile(p.id); };
-                actions.appendChild(editBtn);
-                actions.appendChild(delBtn);
-                card.appendChild(actions);
-
-                // Avatar
-                if (p.avatarUrl) {
-                    const img = document.createElement('img');
-                    img.className = 'ProfileAvatar';
-                    img.src = p.avatarUrl;
-                    img.onerror = () => {
-                        const ph = document.createElement('div');
-                        ph.className = 'ProfileAvatarPlaceholder';
-                        ph.innerHTML = '<span class="material-symbols-outlined" style="font-size:28px;">person</span>';
-                        img.replaceWith(ph);
-                    };
-                    card.appendChild(img);
-                } else {
-                    const ph = document.createElement('div');
-                    ph.className = 'ProfileAvatarPlaceholder';
-                    ph.innerHTML = '<span class="material-symbols-outlined" style="font-size:28px;">person</span>';
-                    card.appendChild(ph);
-                }
-
-                // Name
-                const nameEl = document.createElement('div');
-                nameEl.className = 'ProfileName';
-                nameEl.textContent = p.name || 'Unnamed';
-                card.appendChild(nameEl);
-
-                // Username
-                if (p.username) {
-                    const userEl = document.createElement('div');
-                    userEl.className = 'ProfileUsername';
-                    userEl.textContent = '@' + p.username;
-                    card.appendChild(userEl);
-                }
-
-                // Active badge
-                if (isActive) {
-                    const badge = document.createElement('span');
-                    badge.className = 'ProfileBadge';
-                    badge.textContent = 'Active';
-                    card.appendChild(badge);
-                }
-
-                // Description
-                if (p.description) {
-                    const desc = document.createElement('div');
-                    desc.className = 'ProfileDesc';
-                    desc.textContent = p.description;
-                    card.appendChild(desc);
-                }
-
-                // Businesses
-                if (p.businesses && p.businesses.length > 0) {
-                    const bizDiv = document.createElement('div');
-                    bizDiv.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;justify-content:center;';
-                    p.businesses.forEach(b => {
-                        const pill = document.createElement('span');
-                        pill.style.cssText = 'font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(99,102,241,0.1);color:rgba(99,102,241,0.8);border:1px solid rgba(99,102,241,0.2);';
-                        pill.textContent = b;
-                        bizDiv.appendChild(pill);
-                    });
-                    card.appendChild(bizDiv);
-                }
-
-                grid.appendChild(card);
-            });
-
-            // Add profile card
-            const addCard = document.createElement('div');
-            addCard.className = 'AddProfileCard';
-            addCard.onclick = () => openProfileModal();
-            addCard.innerHTML = '<span class="material-symbols-outlined" style="font-size:36px;">person_add</span><span style="font-size:13px;font-weight:500;">New Profile</span>';
-            grid.appendChild(addCard);
-        }
-
         // ===== IMPORT / EXPORT =====
 
         // Collect ALL data for export (profile-aware)
         function collectExportData() {
-            // Save current profile data first
-            saveCurrentProfileData();
 
             const data = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                data[key] = localStorage.getItem(key);
+                if (!key.startsWith('__ttcAccount')) data[key] = localStorage.getItem(key);
             }
             return data;
         }
@@ -1441,24 +1117,18 @@
             localStorage.clear();
             // Restore all keys
             for (const key in data) {
-                localStorage.setItem(key, data[key]);
+                if (!key.startsWith('__ttcAccount')) localStorage.setItem(key, data[key]);
             }
-            // Reload profile view
-            renderProfiles();
+            window.TechtobyAccount?.migrateLegacyProfiles();
             updateDataSizeInfo();
 
-            // Reload the active profile's data into the live keys
-            const activeId = getActiveProfileId();
-            if (activeId) {
-                loadProfileData(activeId);
-            }
+
         }
 
         function clearAllData() {
             if (!confirm('This will permanently delete ALL data for the entire site. Are you sure?')) return;
-            if (!confirm('This is your last chance. All profiles, settings, and app data will be erased.')) return;
+            if (!confirm('This is your last chance. All settings and app data will be erased.')) return;
             localStorage.clear();
-            renderProfiles();
             updateDataSizeInfo();
             showToast('All data cleared', 'delete_forever');
         }
@@ -1543,230 +1213,6 @@
             return card;
         }
 
-        // ===== APPS & TOOLS =====
-        let appsLoaded = false;
-
-        async function loadApps() {
-            appsLoaded = true;
-            const container = document.getElementById('appsContainer');
-            let tools;
-            try {
-                const resp = await fetch('data/downloads.json', { cache: 'no-store' });
-                if (!resp.ok) throw new Error('fetch failed');
-                tools = await resp.json();
-            } catch (e) {
-                container.innerHTML = `<div class="EmptyState"><span class="material-symbols-outlined">error_outline</span><div>Couldn't load the apps list.</div></div>`;
-                return;
-            }
-            if (!Array.isArray(tools) || !tools.length) {
-                container.innerHTML = `<div class="EmptyState"><span class="material-symbols-outlined">apps</span><div>No apps available yet.</div></div>`;
-                return;
-            }
-            container.innerHTML = '';
-            tools.forEach(tool => {
-                const card = document.createElement('div');
-                card.style.cssText = 'background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.4);border-radius:16px;overflow:hidden;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
-                card.innerHTML = renderAppCard(tool);
-                container.appendChild(card);
-                initCarousel(card, tool);
-                resolveDownload(card, tool);
-            });
-        }
-
-        function difficultyBadge(d) {
-            if (!d) return '';
-            const map = {
-                easy:   ['rgba(34,197,94,0.15)', 'rgba(34,197,94,0.4)', 'rgba(20,120,50,0.95)'],
-                medium: ['rgba(234,179,8,0.15)', 'rgba(234,179,8,0.4)', 'rgba(150,100,0,0.95)'],
-                hard:   ['rgba(239,68,68,0.15)', 'rgba(239,68,68,0.4)', 'rgba(190,40,40,0.95)'],
-            };
-            const c = map[String(d).toLowerCase()] || ['rgba(99,102,241,0.15)', 'rgba(99,102,241,0.4)', 'rgba(99,102,241,0.9)'];
-            return `<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:6px;background:${c[0]};border:1px solid ${c[1]};color:${c[2]};">${escapeHtml(d)}</span>`;
-        }
-
-        function renderAppCard(tool) {
-            return `
-                <div class="appShots" style="position:relative;height:200px;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
-                <div style="padding:18px 20px;display:flex;flex-direction:column;gap:10px;">
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <div style="font-size:18px;font-weight:700;color:rgba(0,0,0,0.85);">${escapeHtml(tool.name || 'Untitled')}</div>
-                        ${difficultyBadge(tool.difficulty)}
-                        ${tool.author ? `<span style="margin-left:auto;font-size:12px;color:rgba(0,0,0,0.45);">${escapeHtml(tool.author)}</span>` : ''}
-                    </div>
-                    <div style="font-size:13px;color:rgba(0,0,0,0.6);line-height:1.6;">${escapeHtml(tool.description || '')}</div>
-                    <div class="appDownload" style="margin-top:4px;">
-                        <button class="GTextBtn" disabled style="opacity:0.6;"><span class="material-symbols-outlined">hourglass_top</span>Checking latest release…</button>
-                    </div>
-                </div>`;
-        }
-
-        function initCarousel(card, tool) {
-            const wrap = card.querySelector('.appShots');
-            const shots = Array.isArray(tool.screenshots) ? tool.screenshots : [];
-            if (!shots.length) {
-                wrap.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(0,0,0,0.3);">
-                    <span class="material-symbols-outlined" style="font-size:36px;">image_not_supported</span>
-                    <span style="font-size:13px;font-weight:500;">No screenshots available</span>
-                </div>`;
-                return;
-            }
-            let idx = 0;
-            const navBtn = (side) => `<button class="appNav-${side}" style="position:absolute;${side}:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,0.4);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:2;"><span class="material-symbols-outlined">${side === 'left' ? 'chevron_left' : 'chevron_right'}</span></button>`;
-            wrap.innerHTML =
-                shots.map((s, i) => `<img class="appShot" src="${escapeHtml(s)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i === 0 ? 1 : 0};transition:opacity 0.3s ease;">`).join('') +
-                (shots.length > 1 ? navBtn('left') + navBtn('right') : '') +
-                `<div class="appCounter" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;font-family:monospace;color:#fff;background:rgba(0,0,0,0.45);padding:2px 8px;border-radius:10px;z-index:2;">1 / ${shots.length}</div>`;
-            const imgs = wrap.querySelectorAll('.appShot');
-            const counter = wrap.querySelector('.appCounter');
-            const show = () => { imgs.forEach((im, i) => im.style.opacity = i === idx ? '1' : '0'); if (counter) counter.textContent = (idx + 1) + ' / ' + shots.length; };
-            const prev = wrap.querySelector('.appNav-left');
-            const next = wrap.querySelector('.appNav-right');
-            if (prev) prev.onclick = () => { idx = (idx - 1 + shots.length) % shots.length; show(); };
-            if (next) next.onclick = () => { idx = (idx + 1) % shots.length; show(); };
-        }
-
-        // Resolve the download link from the tool's github repo's latest release.
-        async function resolveDownload(card, tool) {
-            const slot = card.querySelector('.appDownload');
-            const gh = (tool.github || '').trim();
-            const m = gh.match(/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/i);
-            if (!m) { slot.innerHTML = downloadFallback(gh || '#', 'Open on GitHub'); return; }
-            const owner = m[1], repo = m[2];
-            try {
-                const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`);
-                if (r.status === 404) { slot.innerHTML = downloadFallback(`https://github.com/${owner}/${repo}/releases`, 'No release yet — View GitHub'); return; }
-                if (!r.ok) throw new Error('release fetch failed');
-                const rel = await r.json();
-                const url = (rel.assets && rel.assets.length && rel.assets[0].browser_download_url) || rel.html_url || gh;
-                const ver = rel.tag_name || rel.name || '';
-                slot.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="GTextBtn primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                    <span class="material-symbols-outlined">download</span>Download${ver ? ' ' + escapeHtml(ver) : ''}
-                </a>`;
-            } catch (e) {
-                slot.innerHTML = downloadFallback(gh || '#', 'Open on GitHub');
-            }
-        }
-
-        function downloadFallback(url, label) {
-            return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="GTextBtn" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                <span class="material-symbols-outlined">open_in_new</span>${escapeHtml(label)}
-            </a>`;
-        }
-
-        // ===== DESKTOP APP =====
-        let desktopReleaseLoaded = false;
-
-        async function loadDesktopRelease() {
-            if (desktopReleaseLoaded) return;
-            desktopReleaseLoaded = true;
-
-            const container = document.getElementById('desktopRelease');
-            try {
-                const resp = await fetch('https://api.github.com/repos/dummtoby/techtoby/releases/latest');
-                if (!resp.ok) throw new Error('Failed to fetch release');
-                const release = await resp.json();
-
-                const version = release.tag_name || release.name || 'Unknown';
-                const publishedDate = release.published_at
-                    ? new Date(release.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                    : '—';
-                const body = release.body || '';
-
-                const platformIcons = {
-                    '.exe': 'desktop_windows',
-                    '.msi': 'desktop_windows',
-                    '.dmg': 'desktop_mac',
-                    '.AppImage': 'desktop_windows',
-                    '.deb': 'terminal',
-                    '.rpm': 'terminal',
-                    '.zip': 'folder_zip',
-                    '.tar.gz': 'folder_zip'
-                };
-
-                const platformLabels = {
-                    '.exe': 'Windows',
-                    '.msi': 'Windows Installer',
-                    '.dmg': 'macOS',
-                    '.AppImage': 'Linux (AppImage)',
-                    '.deb': 'Linux (Debian)',
-                    '.rpm': 'Linux (RPM)',
-                    '.zip': 'Archive',
-                    '.tar.gz': 'Archive'
-                };
-
-                let html = `
-                    <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);border-radius:14px;padding:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:14px;">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div style="width:44px;height:44px;border-radius:12px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;">
-                                <span class="material-symbols-outlined" style="font-size:24px;color:rgba(99,102,241,0.8);">new_releases</span>
-                            </div>
-                            <div>
-                                <div style="font-size:16px;font-weight:600;color:rgba(0,0,0,0.85);">${escapeHtml(version)}</div>
-                                <div style="font-size:12px;color:rgba(0,0,0,0.4);">Released ${publishedDate}</div>
-                            </div>
-                            <a href="${escapeHtml(release.html_url)}" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;color:rgba(99,102,241,0.8);text-decoration:none;font-weight:500;display:flex;align-items:center;gap:4px;">
-                                View on GitHub
-                                <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
-                            </a>
-                        </div>`;
-
-                if (body) {
-                    const bodyHtml = escapeHtml(body)
-                        .replace(/\n/g, '<br>')
-                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/- (.+?)(<br>|$)/g, '<span style="display:flex;gap:6px;align-items:flex-start;"><span style="color:rgba(99,102,241,0.6);">•</span><span>$1</span></span>');
-                    html += `<div style="font-size:13px;color:rgba(0,0,0,0.6);line-height:1.7;padding:12px 14px;background:rgba(0,0,0,0.03);border-radius:10px;">${bodyHtml}</div>`;
-                }
-
-                if (release.assets && release.assets.length > 0) {
-                    html += `<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(0,0,0,0.4);margin-top:4px;">Downloads</div>`;
-                    html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
-
-                    release.assets.forEach(asset => {
-                        const name = asset.name;
-                        const sizeBytes = asset.size || 0;
-                        const sizeMb = (sizeBytes / (1024 * 1024)).toFixed(1);
-                        const downloads = asset.download_count || 0;
-
-                        let icon = 'download';
-                        let label = name;
-                        for (const [ext, ic] of Object.entries(platformIcons)) {
-                            if (name.endsWith(ext)) {
-                                icon = ic;
-                                label = platformLabels[ext] + ' — ' + name;
-                                break;
-                            }
-                        }
-
-                        html += `<a href="${escapeHtml(asset.browser_download_url)}" target="_blank" rel="noopener" style="text-decoration:none;">
-                            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);border-radius:12px;transition:all 0.15s ease;cursor:pointer;" onmouseenter="this.style.background='rgba(255,255,255,0.4)';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='rgba(255,255,255,0.25)';this.style.transform=''">
-                                <span class="material-symbols-outlined" style="font-size:22px;color:rgba(99,102,241,0.7);">${icon}</span>
-                                <div style="flex:1;min-width:0;">
-                                    <div style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(label)}</div>
-                                    <div style="font-size:11px;color:rgba(0,0,0,0.35);">${sizeMb} MB · ${downloads.toLocaleString()} downloads</div>
-                                </div>
-                                <span class="material-symbols-outlined" style="font-size:18px;color:rgba(0,0,0,0.3);">download</span>
-                            </div>
-                        </a>`;
-                    });
-
-                    html += `</div>`;
-                }
-
-                html += `</div>`;
-                container.innerHTML = html;
-            } catch (err) {
-                container.innerHTML = `<div class="EmptyState">
-                    <span class="material-symbols-outlined">error_outline</span>
-                    <div>Failed to load release info.</div>
-                    <a href="https://github.com/dummtoby/techtoby/releases/" target="_blank" rel="noopener" class="GTextBtn primary" style="margin-top:8px;">
-                        <span class="material-symbols-outlined">open_in_new</span>
-                        Open GitHub Releases
-                    </a>
-                </div>`;
-            }
-        }
-
         // ===== DEVELOPER MODE =====
         function updateDevModeUI() {
             const enabled = document.getElementById('devModeToggle').checked;
@@ -1803,7 +1249,7 @@
         });
 
         // ===== INIT =====
-        renderProfiles();
+        updateDataSizeInfo();
     </script>
 </body>
 

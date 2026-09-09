@@ -3,6 +3,7 @@
 <html lang="en">
 
 <head>
+    <script src="../account.js"></script>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -620,7 +621,7 @@
           Home</button>
       </div>
 
-      <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png">
+      <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/655910.png">
 
       <div id="FamilyTreeContainer" class="FamilyTreeContainer">
         <div id="gridOverlay" class="gridOverlay"></div>
@@ -765,6 +766,12 @@
     const newImgUrlInput = document.getElementById("new_img_url");
     const cancelEditBtn = document.getElementById("cancel_edit_btn");
     const tutorialVideo = document.getElementById("tutorial_video");
+    window.TechtobyAccount?.bindRobloxAutocomplete(document.getElementById("username"), profile => {
+      document.getElementById("username").value = profile.username || "";
+      document.getElementById("display_name").value = profile.displayName || profile.username || "";
+      document.getElementById("description").value = profile.description || "";
+      document.getElementById("img_url").value = profile.pfp || "";
+    });
     const SCALE_PRESETS = [50, 70, 90, 100, 110, 130, 150];
     let currentScaleIndex = 3;
     let currentScale = 100;
@@ -865,6 +872,7 @@
       card.style.left = restore ? data.left : "100px";
       card.style.top = restore ? data.top : "200px";
       card.dataset.img = data.img;
+      card.dataset.roblox_id = data.roblox_id || "";
       card.dataset.username = data.username;
       card.dataset.display_name = data.display_name;
       card.dataset.description = data.description;
@@ -1149,6 +1157,7 @@
       editingCard = card;
       document.getElementById("img_url").value = card.dataset.img || "";
       document.getElementById("username").value = card.dataset.username || "";
+      document.getElementById("username").dataset.robloxUserId = card.dataset.roblox_id || "";
       document.getElementById("display_name").value = card.dataset.display_name || "";
       document.getElementById("description").value = card.dataset.description || "";
       document.getElementById("age").value = card.dataset.age || "";
@@ -1166,6 +1175,7 @@
       editingCard = null;
       document.getElementById("img_url").value = "";
       document.getElementById("username").value = "";
+      delete document.getElementById("username").dataset.robloxUserId;
       document.getElementById("display_name").value = "";
       document.getElementById("description").value = "";
       document.getElementById("age").value = "";
@@ -1253,6 +1263,7 @@
     function serializeCard(card) {
       return {
         img: card.dataset.img,
+        roblox_id: card.dataset.roblox_id || "",
         username: card.dataset.username,
         display_name: card.dataset.display_name,
         description: card.dataset.description,
@@ -1264,6 +1275,7 @@
     addBtn.onclick = () => {
       const data = {
         img: document.getElementById("img_url").value,
+        roblox_id: document.getElementById("username").dataset.robloxUserId || "",
         username: document.getElementById("username").value,
         display_name: document.getElementById("display_name").value,
         description: document.getElementById("description").value,
@@ -1271,6 +1283,7 @@
       };
       if (editMode && editingCard) {
         editingCard.dataset.img = data.img;
+        editingCard.dataset.roblox_id = data.roblox_id;
         editingCard.dataset.username = data.username;
         editingCard.dataset.display_name = data.display_name;
         editingCard.dataset.description = data.description;

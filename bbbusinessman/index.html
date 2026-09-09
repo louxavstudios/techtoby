@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="../account.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bloxburg Business Manager</title>
@@ -4249,13 +4250,13 @@
     <!-- Profile Side Panel -->
     <div class="ProfilePanel" id="profilePanel">
         <div class="panel-header">
-            <h3>Profiles</h3>
+            <h3>Account &amp; shared sessions</h3>
             <button class="ModalClose" onclick="toggleProfilePanel()">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
         <div class="panel-section">
-            <div class="panel-section-title">Personal Profiles</div>
+            <div class="panel-section-title">My account</div>
             <div id="localProfilesList"></div>
             <a href="../settings/" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;font-size:12px;color:rgba(99,102,241,0.7);text-decoration:none;font-weight:500;border-radius:8px;transition:background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.06)'" onmouseout="this.style.background='transparent'">
                 <span class="material-symbols-outlined" style="font-size:14px;">settings</span>
@@ -4264,7 +4265,7 @@
         </div>
         <div class="panel-section" style="border-top: 1px solid rgba(0,0,0,0.06);">
             <div class="panel-section-title" style="display:flex;align-items:center;gap:6px;position:relative;">
-                Shared Profiles
+                Shared sessions
                 <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;background:rgba(245,158,11,0.15);color:rgba(180,110,0,0.8);">Experimental</span>
                 <button class="HelpBtn" onclick="toggleHelp(this, 'sharedProfiles')" style="margin-left:auto;">?</button>
             </div>
@@ -4286,7 +4287,7 @@
     <div class="ModalOverlay" id="createProfileModal" onclick="if(event.target===this)closeModal('createProfile')">
         <div class="ModalContent" style="max-width: 420px;">
             <div class="ModalTitle">
-                <span id="createProfileModalTitle">Create Shared Profile</span>
+                <span id="createProfileModalTitle">Create shared session</span>
                 <button class="ModalClose" onclick="closeModal('createProfile')">
                     <span class="material-symbols-outlined">close</span>
                 </button>
@@ -4304,7 +4305,7 @@
                 <div class="form-group" id="sharedProfileAffiliate">
                     <label>Use Profile</label>
                     <select id="newProfileAffiliateSelect">
-                        <option value="">— Choose a profile —</option>
+                        <option value="">— Your account —</option>
                     </select>
                     <div style="font-size:11px;color:rgba(0,0,0,0.4);margin-top:4px;">Select which profile's data to use for this shared session.</div>
                 </div>
@@ -4341,7 +4342,7 @@
                 <div class="form-group">
                     <label>Join with Profile</label>
                     <select id="joinProfileAffiliateSelect">
-                        <option value="">— Choose a profile —</option>
+                        <option value="">— Your account —</option>
                     </select>
                 </div>
                 <div id="joinProfilePreview" style="display:none;padding:10px;background:rgba(99,102,241,0.06);border-radius:10px;">
@@ -4445,10 +4446,8 @@
             'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards'
         ];
 
-        // Settings profile integration
-        const TTC_PROFILES_KEY = 'ttcProfiles';
-        const TTC_ACTIVE_KEY = 'ttcActiveProfile';
-        const TTC_DATA_PREFIX = 'ttcData_';
+        // The account owns personal data; shared business sessions remain separate.
+        const ACCOUNT_DATA_KEY = 'bbAccountData';
         const BB_SHARED_KEY = 'bbSharedProfiles';
 
         let profiles = [];
@@ -4477,28 +4476,18 @@
         }
 
         function loadProfiles() {
-            // Read personal profiles from Settings app
-            const settingsProfiles = (JSON.parse(localStorage.getItem(TTC_PROFILES_KEY) || '[]')).map(p => ({
-                ...p,
-                id: String(p.id),
-                type: 'local',
-                name: p.name || 'Unnamed'
-            }));
+            const account = window.TechtobyAccount?.current();
+            const settingsProfiles = [{ id: 'account', type: 'local', name: account?.username || 'My data', username: account?.username || '', avatarUrl: account?.pfp || '' }];
 
             // Read shared profiles
-            const sharedProfiles = JSON.parse(localStorage.getItem(BB_SHARED_KEY) || '[]');
+            const sharedProfiles = JSON.parse(localStorage.getItem(BB_SHARED_KEY) || '[]').map(p => ({ ...p, affiliateProfileId: 'account' }));
 
             profiles = [...settingsProfiles, ...sharedProfiles];
             activeProfileId = localStorage.getItem('bbActiveProfileId');
 
             // Default to Settings active profile if current doesn't match
             if (!activeProfileId || !profiles.find(p => String(p.id) === String(activeProfileId))) {
-                const settingsActive = localStorage.getItem(TTC_ACTIVE_KEY);
-                if (settingsActive && profiles.find(p => String(p.id) === String(settingsActive))) {
-                    activeProfileId = String(settingsActive);
-                } else if (profiles.length > 0) {
-                    activeProfileId = String(profiles[0].id);
-                }
+                activeProfileId = 'account';
                 if (activeProfileId) localStorage.setItem('bbActiveProfileId', activeProfileId);
             }
 
@@ -4532,12 +4521,7 @@
                 localStorage.setItem('bbProfileData_' + profile.id, JSON.stringify(data));
                 if (profile.sessionId) debouncedCloudSync();
             } else {
-                // Merge BB data into Settings profile data store
-                const existing = JSON.parse(localStorage.getItem(TTC_DATA_PREFIX + profile.id) || '{}');
-                PROFILE_DATA_KEYS.forEach(key => {
-                    if (data[key] !== undefined) existing[key] = data[key];
-                });
-                localStorage.setItem(TTC_DATA_PREFIX + profile.id, JSON.stringify(existing));
+                localStorage.setItem(ACCOUNT_DATA_KEY, JSON.stringify(data));
             }
         }
 
@@ -4547,15 +4531,7 @@
                 const saved = localStorage.getItem('bbProfileData_' + profileId);
                 return saved ? JSON.parse(saved) : {};
             }
-            // Settings profile — read from ttcData_
-            const saved = localStorage.getItem(TTC_DATA_PREFIX + profileId);
-            if (!saved) return {};
-            const allData = JSON.parse(saved);
-            const bbData = {};
-            Object.keys(allData).forEach(key => {
-                if (PROFILE_DATA_KEYS.includes(key)) bbData[key] = allData[key];
-            });
-            return bbData;
+            return JSON.parse(localStorage.getItem(ACCOUNT_DATA_KEY) || '{}');
         }
 
         function switchProfile(profileId) {
@@ -4626,7 +4602,7 @@
             if (!profile) return;
             document.getElementById('profileBarName').textContent = profile.name || 'Unnamed';
             const typeEl = document.getElementById('profileBarType');
-            typeEl.textContent = profile.type === 'shared' ? 'Shared' : 'Local';
+            typeEl.textContent = profile.type === 'shared' ? 'Shared' : 'Account';
             typeEl.className = 'profile-type ' + (profile.type === 'shared' ? 'shared' : 'local');
 
             const syncWrapper = document.getElementById('syncIndicatorWrapper');
@@ -4696,17 +4672,17 @@
 
         function createSharedProfile() {
             const settingsProfiles = profiles.filter(p => p.type === 'local');
-            if (settingsProfiles.length === 0) {
-                return alert('You need to create a profile in Settings first.');
+            if (!window.TechtobyAccount?.current()) {
+                return alert('Log in to your account in Settings first.');
             }
 
-            document.getElementById('createProfileModalTitle').textContent = 'Create Shared Profile';
+            document.getElementById('createProfileModalTitle').textContent = 'Create shared session';
             document.getElementById('newProfileNameInput').value = '';
             document.getElementById('newProfileBusinessInput').value = '';
 
             // Populate affiliate dropdown with Settings profiles
             const sel = document.getElementById('newProfileAffiliateSelect');
-            sel.innerHTML = '<option value="">— Choose a profile —</option>';
+            sel.innerHTML = '<option value="">— Your account —</option>';
             settingsProfiles.forEach(p => {
                 sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}${p.username ? ' (@' + escapeHtml(p.username) + ')' : ''}</option>`;
             });
@@ -4823,12 +4799,13 @@
 
         // ===== SHARED PROFILE: JOIN =====
         function joinSharedProfile() {
+            if (!window.TechtobyAccount?.current()) return alert('Log in through Settings first.');
             document.getElementById('joinProfileCodeInput').value = '';
             document.getElementById('joinProfileError').style.display = 'none';
             document.getElementById('joinProfilePreview').style.display = 'none';
 
             const sel = document.getElementById('joinProfileAffiliateSelect');
-            sel.innerHTML = '<option value="">— Choose a profile —</option>';
+            sel.innerHTML = '<option value="">— Your account —</option>';
             profiles.filter(p => p.type === 'local').forEach(p => {
                 sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}${p.username ? ' (@' + escapeHtml(p.username) + ')' : ''}</option>`;
             });
@@ -4995,7 +4972,7 @@
             if (!sharedProfile || sharedProfile.type !== 'shared' || !sharedProfile.isOwner) return;
 
             const settingsProfiles = profiles.filter(p => p.type === 'local');
-            if (settingsProfiles.length === 0) return alert('No profiles to merge from. Create one in Settings first.');
+            if (settingsProfiles.length === 0) return alert('No profiles to merge from. Log in through Settings first.');
 
             // Build pick list
             const overlay = document.createElement('div');
@@ -7313,6 +7290,13 @@
         let editingEmployeeIndex = -1;
         let staffFilterBusinessId = null;
 
+        window.TechtobyAccount?.bindRobloxAutocomplete(document.getElementById('employeeUsername'), profile => {
+            document.getElementById('employeeUsername').value = profile.username || '';
+            document.getElementById('employeeName').value = profile.displayName || profile.username || '';
+            document.getElementById('employeeAvatarUrl').value = profile.pfp || '';
+            previewEmployeeAvatar();
+        });
+
         function loadEmployees() {
             employees = JSON.parse(localStorage.getItem('bbBusinessEmployees') || '[]');
         }
@@ -7352,6 +7336,7 @@
                 document.getElementById('employeeAvatarUrl').value = emp.avatarUrl || '';
                 document.getElementById('employeeName').value = emp.name || '';
                 document.getElementById('employeeUsername').value = emp.username || '';
+                document.getElementById('employeeUsername').dataset.robloxUserId = emp.robloxId || '';
                 if (emp.jobIndex !== null && emp.jobIndex !== undefined && emp.jobIndex < jobTitles.length) {
                     jobSel.value = emp.jobIndex;
                 }
@@ -7361,6 +7346,7 @@
                 document.getElementById('employeeAvatarUrl').value = '';
                 document.getElementById('employeeName').value = '';
                 document.getElementById('employeeUsername').value = '';
+                delete document.getElementById('employeeUsername').dataset.robloxUserId;
                 resetEmployeeAvatarPreview();
             }
 
@@ -7432,6 +7418,7 @@
                 id: editingEmployeeIndex >= 0 ? employees[editingEmployeeIndex].id : Date.now(),
                 name,
                 username,
+                robloxId: document.getElementById('employeeUsername').dataset.robloxUserId || null,
                 avatarUrl,
                 jobIndex,
                 businessLabelId
@@ -9270,8 +9257,8 @@
                 example: 'Example: Convert $1,000 Bloxburg dollars to Blockbux, or calculate the real-money equivalent.'
             },
             sharedProfiles: {
-                title: 'Shared Profiles (Experimental)',
-                text: 'Shared profiles let you sync your business data to the cloud and collaborate with managers in real-time. Create profiles in Settings first, then create a shared session here and select which profile to use. The owner gets a Roblox-safe code word to share — collaborators join by entering it. Use the merge button (⇄) to copy a profile\'s data into the shared session.',
+                title: 'Shared sessions (Experimental)',
+                text: 'Shared profiles let you sync your business data to the cloud and collaborate with managers in real-time. Log in to your account in Settings, then create a shared business session here. The owner gets a Roblox-safe code word to share — collaborators join by entering it. Use the merge button (⇄) to copy a profile\'s data into the shared session.',
                 example: 'Example: Create a shared profile for "Golhem Markets", pick your profile, get the code "dolphin", and tell your managers to join. They\'ll see live updates as you edit.'
             }
         };
