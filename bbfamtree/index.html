@@ -519,6 +519,78 @@
       padding: 24px;
     }
 
+    .TreeSaveRow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .TreeSaveRow input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .TreeAccountStatus {
+      min-height: 18px;
+      margin: 0 0 14px;
+      color: rgba(0, 0, 0, 0.62);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .SavedTreesList {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 320px;
+      margin-top: 18px;
+      overflow-y: auto;
+    }
+
+    .SavedTreeItem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 10px;
+    }
+
+    #SavedTreesModal .ModalContent {
+      max-width: 780px;
+    }
+
+    .SavedTreeName {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .SavedTreeActions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .SavedTreeActions .GTextBtn {
+      padding: 6px 10px;
+    }
+
+    .SavedTreeEmpty {
+      padding: 22px;
+      color: rgba(0, 0, 0, 0.5);
+      font-size: 13px;
+      text-align: center;
+    }
+
     .TutorialVideo {
       width: 100%;
       border-radius: 12px;
@@ -608,11 +680,10 @@
 
 
       <div class="TopButtons">
-        <button id="export_btn" class="GTextBtn">Export to JSON</button>
-        <button id="import_btn" class="GTextBtn">Import from JSON</button>
+        <button id="saved_trees_btn" class="GTextBtn">My Trees</button>
         <button id="prepare_screenshot_btn" class="GTextBtn">Prepare for Screenshot</button>
         <button id="scale_btn" class="GTextBtn">Size 100%</button>
-        <input id="scale_input" class="ScaleInput" type="number" min="10" max="500" placeholder="100"
+        <input id="scale_input" class="ScaleInput" type="number" min="10" max="500" placeholder="100" autocomplete="off"
           style="display: none;">
         <button id="undo_btn" class="GTextBtn" style="opacity: 0.5; pointer-events: none;">↶ Undo</button>
         <button id="redo_btn" class="GTextBtn" style="opacity: 0.5; pointer-events: none;">↷ Redo</button>
@@ -637,18 +708,18 @@
         <label for="img_url">Image URL</label>
         <div class="inputWithButton">
           <div style="position: relative;">
-            <input id="img_url" placeholder="Image URL">
+            <input id="img_url" placeholder="Image URL" autocomplete="off">
             <button id="show_how_btn" class="ShowHowBtn">show me how</button>
           </div>
         </div>
         <label for="username">Username</label>
-        <input id="username" placeholder="Username">
+        <input id="username" placeholder="Username" autocomplete="off">
         <label for="display_name">Display Name</label>
-        <input id="display_name" placeholder="Display Name">
+        <input id="display_name" placeholder="Display Name" autocomplete="off">
         <label for="description">Description</label>
-        <textarea id="description" placeholder="Description"></textarea>
+        <textarea id="description" placeholder="Description" autocomplete="off"></textarea>
         <label for="age">Age</label>
-        <input id="age" placeholder="Age">
+        <input id="age" placeholder="Age" autocomplete="off">
         <button id="add_person_btn">Add Person</button>
         <button id="cancel_edit_btn" style="display: none;">Cancel Edit</button>
       </div>
@@ -678,8 +749,27 @@
           </div>
           <div class="ModalBody">
             <label for="new_img_url" style="font-weight: 600; margin-bottom: 8px; display: block;">New Image URL</label>
-            <input id="new_img_url" placeholder="Enter new image URL" style="width: 100%; margin-bottom: 16px;">
+            <input id="new_img_url" placeholder="Enter new image URL" autocomplete="off" style="width: 100%; margin-bottom: 16px;">
             <button id="confirm_image_change_btn" class="ConfirmBtn">Change Image</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="SavedTreesModal" class="Modal">
+        <div class="ModalContent">
+          <div class="ModalHeader">
+            <h3>My Family Trees</h3>
+            <button id="close_saved_trees_btn" class="CloseModalBtn" type="button">×</button>
+          </div>
+          <div class="ModalBody">
+            <p id="tree_account_status" class="TreeAccountStatus" role="status" aria-live="polite"></p>
+            <div id="tree_save_controls" class="TreeSaveRow">
+              <input id="tree_name_input" placeholder="Family tree name" autocomplete="off">
+              <button id="save_tree_btn" class="GTextBtn" type="button">Save Current Tree</button>
+              <button id="import_tree_btn" class="GTextBtn" type="button">Import Tree from JSON</button>
+            </div>
+            <button id="open_settings_btn" class="GTextBtn" type="button" style="display: none;">Open Settings</button>
+            <div id="saved_trees_list" class="SavedTreesList"></div>
           </div>
         </div>
       </div>
@@ -705,11 +795,6 @@
     } catch (e) {
       console.error('Invalid JSON in properties.config:', e);
     }
-
-    window.addEventListener('beforeunload', function (e) {
-      e.preventDefault();
-      e.returnValue = 'You have unsaved progress in Progressive JSON Data Fields. Are you sure you want to leave?';
-    });
 
   </script>
 
@@ -747,8 +832,6 @@
     const container = document.getElementById("FamilyTreeContainer");
     const addBtn = document.getElementById("add_person_btn");
     const contextMenu = document.getElementById("ContextMenu");
-    const exportBtn = document.getElementById("export_btn");
-    const importBtn = document.getElementById("import_btn");
     const prepareScreenshotBtn = document.getElementById("prepare_screenshot_btn");
     const gridOverlay = document.getElementById("gridOverlay");
     const selectionBox = document.getElementById("selectionBox");
@@ -766,11 +849,55 @@
     const newImgUrlInput = document.getElementById("new_img_url");
     const cancelEditBtn = document.getElementById("cancel_edit_btn");
     const tutorialVideo = document.getElementById("tutorial_video");
+    const savedTreesBtn = document.getElementById("saved_trees_btn");
+    const savedTreesModal = document.getElementById("SavedTreesModal");
+    const closeSavedTreesBtn = document.getElementById("close_saved_trees_btn");
+    const treeAccountStatus = document.getElementById("tree_account_status");
+    const treeSaveControls = document.getElementById("tree_save_controls");
+    const treeNameInput = document.getElementById("tree_name_input");
+    const saveTreeBtn = document.getElementById("save_tree_btn");
+    const importTreeBtn = document.getElementById("import_tree_btn");
+    const openSettingsBtn = document.getElementById("open_settings_btn");
+    const savedTreesList = document.getElementById("saved_trees_list");
+    const TREE_STORAGE_KEY = "bbFamilyTrees";
+    const profileDetailInputs = ["username", "display_name", "description", "age"]
+      .map(id => document.getElementById(id));
+    document.querySelectorAll('input, textarea').forEach(field => {
+      field.setAttribute('autocomplete', 'off');
+      field.setAttribute('autocorrect', 'off');
+      field.setAttribute('autocapitalize', 'off');
+      field.setAttribute('spellcheck', 'false');
+    });
+    function hasCardData(value) {
+      const normalized = String(value ?? '').trim().toLocaleLowerCase();
+      return normalized !== '' && normalized !== 'undefined' && normalized !== 'null';
+    }
     window.TechtobyAccount?.bindRobloxAutocomplete(document.getElementById("username"), profile => {
-      document.getElementById("username").value = profile.username || "";
-      document.getElementById("display_name").value = profile.displayName || profile.username || "";
-      document.getElementById("description").value = profile.description || "";
-      document.getElementById("img_url").value = profile.pfp || "";
+      const usernameInput = document.getElementById("username");
+      const displayNameInput = document.getElementById("display_name");
+      const descriptionInput = document.getElementById("description");
+      const imageInput = document.getElementById("img_url");
+      if (editMode && editingCard) {
+        const selectedRobloxId = String(profile.id || usernameInput.dataset.robloxUserId || '');
+        usernameInput.value = hasCardData(editingCard.dataset.username)
+          ? editingCard.dataset.username
+          : (profile.username || '');
+        usernameInput.dataset.robloxUserId = hasCardData(editingCard.dataset.roblox_id)
+          ? editingCard.dataset.roblox_id
+          : selectedRobloxId;
+        displayNameInput.value = hasCardData(editingCard.dataset.display_name)
+          ? editingCard.dataset.display_name
+          : (profile.displayName || profile.username || '');
+        descriptionInput.value = hasCardData(editingCard.dataset.description)
+          ? editingCard.dataset.description
+          : (profile.description || '');
+        imageInput.value = profile.pfp || editingCard.dataset.img || '';
+        return;
+      }
+      usernameInput.value = profile.username || "";
+      displayNameInput.value = profile.displayName || profile.username || "";
+      descriptionInput.value = profile.description || "";
+      imageInput.value = profile.pfp || "";
     });
     const SCALE_PRESETS = [50, 70, 90, 100, 110, 130, 150];
     let currentScaleIndex = 3;
@@ -786,6 +913,7 @@
       const state = {
         cards: [...container.querySelectorAll('.PersonCard')].map(card => ({
           img: card.dataset.img,
+          roblox_id: card.dataset.roblox_id || "",
           username: card.dataset.username,
           display_name: card.dataset.display_name,
           description: card.dataset.description,
@@ -1055,7 +1183,6 @@
     `;
       } else {
         contextMenu.innerHTML = `
-      <button onclick="importTree()">Import Tree JSON</button>
       <button onclick="clearTree()">Clear</button>
     `;
       }
@@ -1085,6 +1212,19 @@
         newImgUrlInput.value = "";
       }
     });
+    savedTreesBtn.addEventListener("click", openSavedTrees);
+    closeSavedTreesBtn.addEventListener("click", closeSavedTrees);
+    savedTreesModal.addEventListener("click", (e) => {
+      if (e.target === savedTreesModal) closeSavedTrees();
+    });
+    saveTreeBtn.addEventListener("click", saveCurrentTreeToAccount);
+    importTreeBtn.addEventListener("click", importTree);
+    treeNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveCurrentTreeToAccount();
+    });
+    openSettingsBtn.addEventListener("click", () => {
+      window.location.href = "../settings/";
+    });
     confirmImageChangeBtn.addEventListener("click", () => {
       if (currentRightClickCard && newImgUrlInput.value.trim()) {
         const newUrl = newImgUrlInput.value.trim();
@@ -1092,6 +1232,7 @@
         currentRightClickCard.querySelector('.PersonImageWrapper img').src = newUrl;
         changeImageModal.classList.remove("show");
         newImgUrlInput.value = "";
+        saveState();
       }
     });
     scaleBtn.addEventListener("click", () => {
@@ -1161,10 +1302,16 @@
       document.getElementById("display_name").value = card.dataset.display_name || "";
       document.getElementById("description").value = card.dataset.description || "";
       document.getElementById("age").value = card.dataset.age || "";
-      addBtn.textContent = "Update Person";
+      document.getElementById("username").disabled = false;
+      document.getElementById("display_name").disabled = hasCardData(card.dataset.display_name);
+      document.getElementById("description").disabled = hasCardData(card.dataset.description);
+      document.getElementById("age").disabled = hasCardData(card.dataset.age);
+      addBtn.textContent = "Update Missing Info";
       cancelEditBtn.style.display = "block";
       card.style.outline = "3px solid #2563eb";
       card.style.outlineOffset = "2px";
+      document.getElementById("username").focus();
+      document.getElementById("username").select();
     }
     function exitEditMode() {
       if (editingCard) {
@@ -1179,6 +1326,7 @@
       document.getElementById("display_name").value = "";
       document.getElementById("description").value = "";
       document.getElementById("age").value = "";
+      profileDetailInputs.forEach(input => input.disabled = false);
       addBtn.textContent = "Add Person";
       cancelEditBtn.style.display = "none";
     }
@@ -1209,24 +1357,14 @@
       const data = serializeCard(currentRightClickCard);
       downloadJSON(data, "person.json");
     }
-    exportBtn.onclick = () => {
-      const exportData = {
-        scale: currentScale,
-        cards: [...container.querySelectorAll('.PersonCard')].map(serializeCard)
-      };
-      downloadJSON(exportData, "family_tree.json");
-    };
-    importBtn.onclick = () => importTree();
     prepareScreenshotBtn.onclick = () => {
       if (uiHidden) {
-        exportBtn.style.display = 'inline-block';
-        importBtn.style.display = 'inline-block';
+        savedTreesBtn.style.display = 'inline-flex';
         addPanel.style.display = 'flex';
         prepareScreenshotBtn.textContent = 'Prepare for Screenshot';
         uiHidden = false;
       } else {
-        exportBtn.style.display = 'none';
-        importBtn.style.display = 'none';
+        savedTreesBtn.style.display = 'none';
         addPanel.style.display = 'none';
         prepareScreenshotBtn.textContent = 'Show UI';
         uiHidden = true;
@@ -1236,26 +1374,196 @@
       const cards = container.querySelectorAll('.PersonCard');
       cards.forEach(card => card.remove());
     }
+    function collectTreeData() {
+      return {
+        scale: currentScale,
+        cards: [...container.querySelectorAll('.PersonCard')].map(serializeCard)
+      };
+    }
+    function loadTreeData(data) {
+      const cards = Array.isArray(data) ? data : data?.cards;
+      if (!Array.isArray(cards)) throw new Error('This family tree data is invalid.');
+      exitEditMode();
+      clearSelection();
+      clearTree();
+      cards.forEach(card => createPersonCard(card, true));
+      if (!Array.isArray(data) && data.scale !== undefined) applyScale(data.scale);
+      undoStack = [];
+      redoStack = [];
+      saveState();
+      updateUndoRedoButtons();
+    }
+    function currentTechtobyAccount() {
+      return window.TechtobyAccount?.current?.() || null;
+    }
+    function readSavedTrees() {
+      try {
+        const trees = JSON.parse(localStorage.getItem(TREE_STORAGE_KEY) || '[]');
+        return Array.isArray(trees)
+          ? trees.filter(tree => tree && typeof tree.name === 'string' && tree.tree)
+          : [];
+      } catch {
+        return [];
+      }
+    }
+    function writeSavedTrees(trees) {
+      localStorage.setItem(TREE_STORAGE_KEY, JSON.stringify(trees));
+    }
+    function setTreeAccountStatus(message) {
+      treeAccountStatus.textContent = message;
+    }
+    function closeSavedTrees() {
+      savedTreesModal.classList.remove('show');
+    }
+    function openSavedTrees() {
+      const account = currentTechtobyAccount();
+      treeSaveControls.style.display = 'flex';
+      treeNameInput.style.display = account ? 'block' : 'none';
+      saveTreeBtn.style.display = account ? 'inline-flex' : 'none';
+      openSettingsBtn.style.display = account ? 'none' : 'inline-flex';
+      setTreeAccountStatus(account
+        ? `Signed in as @${account.username}. Saved trees sync with your account.`
+        : 'Log in through Settings to save and load family trees on your account.');
+      renderSavedTrees();
+      savedTreesModal.classList.add('show');
+      if (account) treeNameInput.focus();
+    }
+    async function syncSavedTrees(successMessage) {
+      try {
+        await window.TechtobyAccount.sync();
+        setTreeAccountStatus(successMessage);
+      } catch (error) {
+        setTreeAccountStatus(`Saved on this device, but not yet on your account: ${error.message}`);
+      }
+    }
+    async function saveCurrentTreeToAccount() {
+      const account = currentTechtobyAccount();
+      if (!account) {
+        openSavedTrees();
+        return;
+      }
+      const name = treeNameInput.value.trim();
+      if (!name) {
+        setTreeAccountStatus('Enter a name for this family tree.');
+        treeNameInput.focus();
+        return;
+      }
+      const trees = readSavedTrees();
+      const existingIndex = trees.findIndex(tree => tree.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+      if (existingIndex !== -1 && !confirm(`Overwrite family tree "${trees[existingIndex].name}"?`)) return;
+      const savedTree = { name, updatedAt: new Date().toISOString(), tree: collectTreeData() };
+      if (existingIndex === -1) trees.push(savedTree);
+      else trees[existingIndex] = savedTree;
+      writeSavedTrees(trees);
+      treeNameInput.value = name;
+      renderSavedTrees();
+      saveTreeBtn.disabled = true;
+      setTreeAccountStatus('Saving to your account…');
+      await syncSavedTrees(`Saved "${name}" to @${account.username}.`);
+      saveTreeBtn.disabled = false;
+    }
+    async function overwriteSavedTree(name) {
+      if (!confirm(`Overwrite family tree "${name}" with the tree currently in the editor?`)) return;
+      const trees = readSavedTrees();
+      const treeIndex = trees.findIndex(tree => tree.name === name);
+      if (treeIndex === -1) {
+        setTreeAccountStatus(`Could not find "${name}".`);
+        return;
+      }
+      trees[treeIndex] = {
+        ...trees[treeIndex],
+        updatedAt: new Date().toISOString(),
+        tree: collectTreeData()
+      };
+      writeSavedTrees(trees);
+      renderSavedTrees();
+      setTreeAccountStatus('Saving overwrite to your account…');
+      await syncSavedTrees(`Overwrote "${name}" on your account.`);
+    }
+    function exportSavedTree(savedTree) {
+      const safeName = savedTree.name.replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
+      downloadJSON(savedTree.tree, `${safeName || 'family_tree'}.json`);
+    }
+    async function deleteSavedTree(name) {
+      if (!confirm(`Delete family tree "${name}"?`)) return;
+      const trees = readSavedTrees().filter(tree => tree.name !== name);
+      writeSavedTrees(trees);
+      renderSavedTrees();
+      setTreeAccountStatus('Removing from your account…');
+      await syncSavedTrees(`Deleted "${name}" from your account.`);
+    }
+    function renderSavedTrees() {
+      savedTreesList.replaceChildren();
+      if (!currentTechtobyAccount()) return;
+      const trees = readSavedTrees().sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      if (!trees.length) {
+        const empty = document.createElement('div');
+        empty.className = 'SavedTreeEmpty';
+        empty.textContent = 'No family trees saved to this account yet.';
+        savedTreesList.append(empty);
+        return;
+      }
+      trees.forEach(savedTree => {
+        const item = document.createElement('div');
+        item.className = 'SavedTreeItem';
+        const name = document.createElement('div');
+        name.className = 'SavedTreeName';
+        name.textContent = savedTree.name;
+        name.title = savedTree.updatedAt ? `Last saved ${new Date(savedTree.updatedAt).toLocaleString()}` : savedTree.name;
+        const actions = document.createElement('div');
+        actions.className = 'SavedTreeActions';
+        const loadButton = document.createElement('button');
+        loadButton.type = 'button';
+        loadButton.className = 'GTextBtn';
+        loadButton.textContent = 'Load';
+        loadButton.addEventListener('click', () => {
+          try {
+            loadTreeData(savedTree.tree);
+            treeNameInput.value = savedTree.name;
+            closeSavedTrees();
+          } catch (error) {
+            setTreeAccountStatus(error.message);
+          }
+        });
+        const overwriteButton = document.createElement('button');
+        overwriteButton.type = 'button';
+        overwriteButton.className = 'GTextBtn';
+        overwriteButton.textContent = 'Overwrite';
+        overwriteButton.addEventListener('click', () => overwriteSavedTree(savedTree.name));
+        const exportButton = document.createElement('button');
+        exportButton.type = 'button';
+        exportButton.className = 'GTextBtn';
+        exportButton.textContent = 'Export JSON';
+        exportButton.addEventListener('click', () => exportSavedTree(savedTree));
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'GTextBtn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => deleteSavedTree(savedTree.name));
+        actions.append(loadButton, overwriteButton, exportButton, deleteButton);
+        item.append(name, actions);
+        savedTreesList.append(item);
+      });
+    }
     function importTree() {
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = ".json";
+      input.accept = ".json,application/json";
       input.onchange = e => {
         const file = e.target.files[0];
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-          const data = JSON.parse(reader.result);
-          clearTree();
-          if (data.cards && Array.isArray(data.cards)) {
-            data.cards.forEach(d => createPersonCard(d, true));
-            if (data.scale !== undefined) {
-              applyScale(data.scale);
-            }
-          } else if (Array.isArray(data)) {
-            data.forEach(d => createPersonCard(d, true));
+          try {
+            const data = JSON.parse(reader.result);
+            loadTreeData(data);
+            treeNameInput.value = file.name.replace(/\.json$/i, '');
+            closeSavedTrees();
+          } catch (error) {
+            setTreeAccountStatus(`Could not import this tree: ${error.message}`);
           }
-          saveState();
         };
+        reader.onerror = () => setTreeAccountStatus('Could not read this JSON file.');
         reader.readAsText(file);
       };
       input.click();
@@ -1282,17 +1590,22 @@
         age: document.getElementById("age").value
       };
       if (editMode && editingCard) {
-        editingCard.dataset.img = data.img;
-        editingCard.dataset.roblox_id = data.roblox_id;
-        editingCard.dataset.username = data.username;
-        editingCard.dataset.display_name = data.display_name;
-        editingCard.dataset.description = data.description;
-        editingCard.dataset.age = data.age;
-        editingCard.querySelector('.PersonImageWrapper img').src = data.img;
-        editingCard.querySelector('.PersonUsername').textContent = data.username;
-        editingCard.querySelector('.PersonName').textContent = data.display_name;
-        editingCard.querySelector('.PersonDescription').textContent = data.description;
-        editingCard.querySelector('.PersonAge span[contenteditable]').textContent = data.age;
+        if (hasCardData(data.img)) {
+          editingCard.dataset.img = data.img;
+          editingCard.querySelector('.PersonImageWrapper img').src = data.img;
+        }
+        if (!hasCardData(editingCard.dataset.roblox_id) && hasCardData(data.roblox_id)) {
+          editingCard.dataset.roblox_id = data.roblox_id;
+        }
+        const fillMissingCardField = (datasetKey, selector, value) => {
+          if (hasCardData(editingCard.dataset[datasetKey]) || !hasCardData(value)) return;
+          editingCard.dataset[datasetKey] = value;
+          editingCard.querySelector(selector).textContent = value;
+        };
+        fillMissingCardField('username', '.PersonUsername', data.username);
+        fillMissingCardField('display_name', '.PersonName', data.display_name);
+        fillMissingCardField('description', '.PersonDescription', data.description);
+        fillMissingCardField('age', '.PersonAge span[contenteditable]', data.age);
         exitEditMode();
       } else {
         createPersonCard(data);

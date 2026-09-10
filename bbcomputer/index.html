@@ -448,11 +448,43 @@
         }
 
         .DraggableWindow img {
-            max-width: 800px;
-            max-height: 800px;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             pointer-events: none;
             border-radius: 8px;
             display: block;
+        }
+
+        .WindowResizeHandle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            z-index: 2;
+        }
+
+        .WindowResizeHandle.nw {
+            top: -5px;
+            left: -5px;
+            cursor: nwse-resize;
+        }
+
+        .WindowResizeHandle.ne {
+            top: -5px;
+            right: -5px;
+            cursor: nesw-resize;
+        }
+
+        .WindowResizeHandle.sw {
+            bottom: -5px;
+            left: -5px;
+            cursor: nesw-resize;
+        }
+
+        .WindowResizeHandle.se {
+            right: -5px;
+            bottom: -5px;
+            cursor: nwse-resize;
         }
 
         .AppIcon {
@@ -708,7 +740,7 @@
                 <div class="DesktopIconGrid" id="desktopGrid">
                     <!-- Default Trash Icon -->
                     <div class="AppIcon" id="default-trash" style="left: 10px; top: 10px;">
-                        <img src="https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/bbcomputer-icon-recycle-bin.png" alt="Recycle Bin">
+                        <img src="https://img.icons8.com/?size=100&amp;id=74176&amp;format=png&amp;color=000000" alt="Recycle Bin">
                         <span>Recycle Bin</span>
                     </div>
                 </div>
@@ -718,7 +750,7 @@
                     <div class="TaskbarCenter" id="taskbarCenter">
                         <!-- Windows 11 Start Button -->
                         <div class="TaskbarIcon" id="start-btn">
-                            <img src="https://cdn.dummtoby.network/assets/legacy/cdn.shawnyxx.dev/fileshare/bbcomputer-icon-windows.png" alt="Start">
+                            <img src="https://img.icons8.com/?size=100&amp;id=M9BRw0RJZXKi&amp;format=png&amp;color=000000" alt="Start">
                         </div>
                     </div>
                     <div class="TaskbarRight">
@@ -1126,7 +1158,7 @@
         // Add draggable window function
         let highestZIndex = 50;
 
-        function createDraggableWindow(url, left = 100, top = 50, zIndex = null) {
+        function createDraggableWindow(url, left = 100, top = 50, zIndex = null, savedWidth = null) {
             const winDiv = document.createElement('div');
             winDiv.className = 'DraggableWindow';
             winDiv.style.left = left + 'px';
@@ -1140,7 +1172,28 @@
             img.crossOrigin = "anonymous";
             winDiv.appendChild(img);
 
+            ['nw', 'ne', 'sw', 'se'].forEach(corner => {
+                const handle = document.createElement('div');
+                handle.className = `WindowResizeHandle ${corner}`;
+                handle.dataset.corner = corner;
+                winDiv.appendChild(handle);
+            });
+
             desktopCanvas.appendChild(winDiv);
+
+            const initializeWindowSize = () => {
+                const aspectRatio = img.naturalWidth / img.naturalHeight || 1;
+                const initialScale = Math.min(1, 800 / img.naturalWidth, 800 / img.naturalHeight);
+                const initialWidth = savedWidth || img.naturalWidth * initialScale;
+                winDiv.dataset.aspectRatio = aspectRatio;
+                winDiv.style.width = initialWidth + 'px';
+                winDiv.style.height = (initialWidth / aspectRatio) + 'px';
+            };
+            if (img.complete && img.naturalWidth) {
+                initializeWindowSize();
+            } else {
+                img.addEventListener('load', initializeWindowSize, { once: true });
+            }
 
             const sideItem = document.createElement('div');
             sideItem.className = 'ListItem';
@@ -1160,7 +1213,28 @@
             let isDragging = false;
             let startX, startY, initialLeft, initialTop;
 
+            let isResizing = false;
+            let resizeCorner = '';
+            let initialWidth, initialHeight;
+
+            winDiv.querySelectorAll('.WindowResizeHandle').forEach(handle => {
+                handle.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    resizeCorner = handle.dataset.corner;
+                    winDiv.style.zIndex = highestZIndex++;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialLeft = parseFloat(winDiv.style.left) || 0;
+                    initialTop = parseFloat(winDiv.style.top) || 0;
+                    initialWidth = winDiv.offsetWidth;
+                    initialHeight = winDiv.offsetHeight;
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            });
+
             winDiv.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.WindowResizeHandle')) return;
                 isDragging = true;
                 winDiv.style.zIndex = highestZIndex++;
 
@@ -1180,14 +1254,41 @@
             });
 
             document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-
                 const transform = desktopCanvas.style.transform;
                 let scale = 1;
                 if (transform && transform.includes('scale')) {
                     const match = transform.match(/scale\(([^)]+)\)/);
                     if (match) scale = parseFloat(match[1]);
                 }
+
+                if (isResizing) {
+                    const dx = (e.clientX - startX) / scale;
+                    const dy = (e.clientY - startY) / scale;
+                    const aspectRatio = parseFloat(winDiv.dataset.aspectRatio) || (initialWidth / initialHeight);
+                    const horizontalDirection = resizeCorner.includes('e') ? 1 : -1;
+                    const verticalDirection = resizeCorner.includes('s') ? 1 : -1;
+                    const horizontalChange = horizontalDirection * dx;
+                    const verticalChange = verticalDirection * dy;
+                    const ratioSquared = aspectRatio * aspectRatio;
+                    const projectedChange = (ratioSquared * horizontalChange + aspectRatio * verticalChange) / (ratioSquared + 1);
+                    const minimumWidth = Math.max(80, 60 * aspectRatio);
+                    const anchorRight = initialLeft + initialWidth;
+                    const anchorBottom = initialTop + initialHeight;
+                    const maximumWidth = Math.max(minimumWidth, Math.min(
+                        resizeCorner.includes('w') ? anchorRight : desktopCanvas.clientWidth - initialLeft,
+                        (resizeCorner.includes('n') ? anchorBottom : desktopCanvas.clientHeight - initialTop) * aspectRatio
+                    ));
+                    const newWidth = Math.min(maximumWidth, Math.max(minimumWidth, initialWidth + projectedChange));
+                    const newHeight = newWidth / aspectRatio;
+
+                    winDiv.style.width = newWidth + 'px';
+                    winDiv.style.height = newHeight + 'px';
+                    if (resizeCorner.includes('w')) winDiv.style.left = (anchorRight - newWidth) + 'px';
+                    if (resizeCorner.includes('n')) winDiv.style.top = (anchorBottom - newHeight) + 'px';
+                    return;
+                }
+
+                if (!isDragging) return;
 
                 const dx = (e.clientX - startX) / scale;
                 const dy = (e.clientY - startY) / scale;
@@ -1198,6 +1299,7 @@
 
             document.addEventListener('mouseup', () => {
                 isDragging = false;
+                isResizing = false;
             });
         }
 
@@ -1474,7 +1576,8 @@
                         url: img.src,
                         left: parseFloat(win.style.left) || 0,
                         top: parseFloat(win.style.top) || 0,
-                        zIndex: parseInt(win.style.zIndex) || 50
+                        zIndex: parseInt(win.style.zIndex) || 50,
+                        width: parseFloat(win.style.width) || null
                     });
                 }
             });
@@ -1550,7 +1653,7 @@
                 }
             }
             if (state.winNodes) {
-                state.winNodes.forEach(win => createDraggableWindow(win.url, win.left, win.top, win.zIndex));
+                state.winNodes.forEach(win => createDraggableWindow(win.url, win.left, win.top, win.zIndex, win.width));
             }
         }
 

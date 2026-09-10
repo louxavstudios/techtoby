@@ -365,9 +365,9 @@
         if (event.key === KEY && JSON.parse(event.oldValue || 'null')?.token !== state()?.token) location.reload();
     });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') sync().catch(() => {}); });
-    window.addEventListener('beforeunload', event => {
+    window.addEventListener('pagehide', () => {
         const current = state();
-        if (current?.token && !same(snapshot(), current.base || {})) { sync().catch(() => {}); event.preventDefault(); event.returnValue = ''; }
+        if (current?.token && !same(snapshot(), current.base || {})) sync().catch(() => {});
     });
     setInterval(() => {
         if (!state()?.token || paused) return;
