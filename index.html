@@ -667,19 +667,72 @@
         }
     </style>
     <style>
+        .MobileNotice {
+            display: none;
+        }
+
+        .mobile-app-status {
+            display: none;
+        }
+
         @media (max-width: 768px) {
-            .MobileBlock { display: flex !important; }
-            body > *:not(.MobileBlock) { display: none !important; }
+            body {
+                overflow-y: auto;
+                min-height: 100dvh;
+            }
+
+            .desktop {
+                padding-top: 6.5rem;
+                padding-bottom: 6rem;
+                min-height: 100dvh;
+            }
+
+            .MobileNotice {
+                display: block;
+                position: fixed;
+                top: 12px;
+                left: 12px;
+                right: 12px;
+                z-index: 100;
+                padding: 12px 14px;
+                border-radius: 14px;
+                background: rgba(255, 255, 255, 0.35);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .MobileNotice strong {
+                display: block;
+                margin-bottom: 2px;
+            }
+
+            .app-icon.mobile-disabled {
+                opacity: 0.55;
+                cursor: not-allowed;
+            }
+
+            .app-icon.mobile-disabled:hover {
+                transform: none;
+            }
+
+            .mobile-app-status {
+                display: block;
+                margin-top: 4px;
+                font-size: 10px;
+                font-weight: 600;
+                opacity: 0.65;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="MobileBlock" style="display:none;position:fixed;inset:0;z-index:999999;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-        <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.1);">
-            <span style="font-size:48px;display:block;margin-bottom:16px;">🖥️</span>
-            <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:rgba(0,0,0,0.8);">Desktop Only</h2>
-            <p style="font-size:14px;color:rgba(0,0,0,0.5);line-height:1.6;">Sorry, this site is currently only available on desktop devices.</p>
-        </div>
+    <div class="MobileNotice" role="status">
+        <strong>Mobile preview</strong>
+        The Techtoby home screen is available on mobile. Apps are disabled for now.
     </div>
     <div class="gridOverlay"></div>
     <div id="appTooltip" class="app-tooltip">
@@ -758,13 +811,21 @@
                 const data = await response.json();
                 const desktopElement = document.getElementById('desktop');
                 const selectionBox = document.getElementById('selection-box');
+                const is_mobile = window.matchMedia('(max-width: 768px)').matches ||
+                    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
                 
                 data.apps.forEach(app => {
                     const a = document.createElement('a');
                     a.href = app.path;
                     a.className = 'app-icon desktop-item';
-                    a.draggable = true;
+                    a.draggable = !is_mobile;
                     a.dataset.appId = app.name;
+
+                    if (is_mobile) {
+                        a.classList.add('mobile-disabled');
+                        a.setAttribute('aria-disabled', 'true');
+                        a.title = 'This app is currently unavailable on mobile.';
+                    }
                     a.dataset.spanCols = 1;
                     a.dataset.spanRows = 1;
 
@@ -797,9 +858,14 @@
                     const appName = document.createElement('div');
                     appName.className = 'app-name';
                     appName.textContent = app.name;
+
+                    const mobile_app_status = document.createElement('div');
+                    mobile_app_status.className = 'mobile-app-status';
+                    mobile_app_status.textContent = 'Desktop only';
                     
                     a.appendChild(iconImg);
                     a.appendChild(appName);
+                    a.appendChild(mobile_app_status);
                     
                     a.addEventListener('mouseenter', () => {
                         if (document.body.classList.contains('customizing')) return;
@@ -820,6 +886,16 @@
                     
                     a.addEventListener('click', (e) => {
                         document.getElementById('appTooltip').classList.remove('show');
+
+                        if (is_mobile) {
+                            e.preventDefault();
+                            openModal(
+                                'Desktop only',
+                                '<p style="line-height:1.6;">This app is not available on mobile yet. Please open Techtoby Corp on a desktop device to use it.</p>'
+                            );
+                            return;
+                        }
+
                         // If customizing, prevent link navigation
                         if (document.body.classList.contains('customizing')) {
                             e.preventDefault();
