@@ -3297,13 +3297,9 @@
         .JobHeaderActions { display:flex; gap:8px; }
         .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:8px; margin-top:10px; }
         .JobMetricCard { appearance:none; -webkit-appearance:none; position:relative; display:block; width:100%; height:76px; min-height:76px; margin:0; padding:0; border-radius:10px; background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.55); perspective:800px; cursor:pointer; overflow:hidden; text-align:left; font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; }
-        .JobMetricCardInner { position:relative; width:100%; height:100%; transition:transform .38s cubic-bezier(.2,.7,.2,1); }
-        .JobMetricCard.flipping { animation:JobMetricFlip .36s ease-in-out; }
-        @keyframes JobMetricFlip { 0% { transform:rotateY(0deg); } 50% { transform:rotateY(90deg); } 100% { transform:rotateY(0deg); } }
-        @-webkit-keyframes JobMetricFlip { 0% { -webkit-transform:rotateY(0deg); } 50% { -webkit-transform:rotateY(90deg); } 100% { -webkit-transform:rotateY(0deg); } }
-        .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
-        .JobMetricFace { position:absolute; inset:0; padding:9px 10px; display:flex; flex-direction:column; justify-content:center; border-radius:10px; background:rgba(255,255,255,.32); box-sizing:border-box; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); }
-        .JobMetricFace[hidden] { display:none !important; }
+        .JobMetricCardInner { position:relative; width:100%; height:100%; transition:transform .38s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
+        .JobMetricFace { position:absolute; inset:0; padding:9px 10px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:10px; background:rgba(255,255,255,.32); box-sizing:border-box; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); }
         .JobMetricBack { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); background:rgba(255,255,255,.5); }
         .JobMetricCard .label { font-size:10px; line-height:1; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
         .JobMetricCard .value { margin-top:5px; font-size:16px; line-height:1.05; font-weight:700; color:rgba(0,0,0,.76); white-space:nowrap; }
@@ -9638,28 +9634,14 @@
                 const hpd = job.hoursPerDay || 24;
                 const hourly = job.wage !== null && job.wage !== undefined ? job.wage / 24 : 0;
                 const plannedCount = job.count || 1;
-                const plannedCost = hourly * hpd * plannedCount;
                 const assignedCost = hourly * hpd * assigned;
+                const plannedCost = hourly * hpd * plannedCount;
                 const budget = parseFloat(document.getElementById('budgetInput').value) || 0;
                 const days = Math.max(1, parseInt(document.getElementById('daysInput').value) || 1);
                 const dailyBudget = budget / days;
-                const totalAssignedCost = jobTitles.reduce((sum, currentJob, jobIndex) => {
-                    if (currentJob.disabled) return sum;
-                    const currentAssigned = empCounts[jobIndex] || 0;
-                    const currentHours = currentJob.hoursPerDay || 24;
-                    const currentHourly = currentJob.wage !== null && currentJob.wage !== undefined ? currentJob.wage / 24 : 0;
-                    return sum + (currentHourly * currentHours * currentAssigned);
-                }, 0);
-                const totalPlannedCost = jobTitles.reduce((sum, currentJob) => {
-                    if (currentJob.disabled) return sum;
-                    const currentCount = currentJob.count || 1;
-                    const currentHours = currentJob.hoursPerDay || 24;
-                    const currentHourly = currentJob.wage !== null && currentJob.wage !== undefined ? currentJob.wage / 24 : 0;
-                    return sum + (currentHourly * currentHours * currentCount);
-                }, 0);
-                const assignedRemaining = dailyBudget - totalAssignedCost;
-                const plannedRemaining = dailyBudget - totalPlannedCost;
-                const money = value => '
+                const assignedRemaining = dailyBudget - assignedCost;
+                const plannedRemaining = dailyBudget - plannedCost;
+                const money = value => '$' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
                 const cards = document.createElement('div');
                 cards.className = 'JobMetricCards';
@@ -9669,37 +9651,38 @@
                     card.type = 'button';
                     card.className = 'JobMetricCard';
                     card.dataset.mode = 'assigned';
-                    card.setAttribute('aria-label', label + ': showing assigned staff. Tap to show planned positions.');
 
+                    const inner = document.createElement('div');
+                    inner.className = 'JobMetricCardInner';
                     const assignedFace = document.createElement('div');
-                    assignedFace.className = 'JobMetricFace';
+                    assignedFace.className = 'JobMetricFace JobMetricFront';
                     assignedFace.innerHTML = '<div class="label">' + label + '</div><div class="value">' + assignedValue + '</div><div class="sub">' + assignedSub + '</div>';
-
                     const plannedFace = document.createElement('div');
-                    plannedFace.className = 'JobMetricFace';
-                    plannedFace.hidden = true;
+                    plannedFace.className = 'JobMetricFace JobMetricBack';
                     plannedFace.innerHTML = '<div class="label">' + label + '</div><div class="value">' + plannedValue + '</div><div class="sub">' + plannedSub + '</div>';
+                    inner.appendChild(assignedFace);
+                    inner.appendChild(plannedFace);
+                    card.appendChild(inner);
 
-                    card.appendChild(assignedFace);
-                    card.appendChild(plannedFace);
-
-                    card.addEventListener('click', () => {
-                        if (card.classList.contains('flipping')) return;
-                        card.classList.add('flipping');
-                        window.setTimeout(() => {
-                            const showPlanned = card.dataset.mode === 'assigned';
-                            card.dataset.mode = showPlanned ? 'planned' : 'assigned';
-                            assignedFace.hidden = showPlanned;
-                            plannedFace.hidden = !showPlanned;
-                            card.setAttribute('aria-label', label + ': showing ' + (showPlanned ? 'planned positions' : 'assigned staff') + '. Tap to switch.');
-                            card.classList.remove('flipping');
-                        }, 180);
+                    const flip = () => {
+                        const planned = card.dataset.mode === 'assigned';
+                        card.dataset.mode = planned ? 'planned' : 'assigned';
+                        card.classList.toggle('flipped', planned);
+                        card.setAttribute('aria-label', label + ': showing ' + (planned ? 'planned positions' : 'assigned staff') + '. Tap to switch.');
+                    };
+                    card.setAttribute('aria-label', label + ': showing assigned staff. Tap to show planned positions.');
+                    card.addEventListener('click', flip);
+                    card.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            flip();
+                        }
                     });
                     return card;
                 };
 
-                cards.appendChild(makeMetricCard('Daily Cost', money(assignedCost), assigned + ' assigned staff in this job', money(plannedCost), plannedCount + ' planned position' + (plannedCount === 1 ? '' : 's') + ' in this job'));
-                cards.appendChild(makeMetricCard('Remaining', money(assignedRemaining), 'after all assigned staff', money(plannedRemaining), 'after all planned positions'));
+                cards.appendChild(makeMetricCard('Daily Cost', money(assignedCost), assigned + ' assigned staff', money(plannedCost), plannedCount + ' planned position' + (plannedCount === 1 ? '' : 's')));
+                cards.appendChild(makeMetricCard('Remaining', money(assignedRemaining), 'after this job’s assigned staff', money(plannedRemaining), 'after this job’s planned positions'));
 
                 const info = item.querySelector('.JobTitleInfo');
                 if (info) info.appendChild(cards);
