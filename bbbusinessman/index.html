@@ -3296,7 +3296,11 @@
         .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
         .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:6px; margin-top:8px; }
-        .JobMetricCard { padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); }
+        .JobMetricCard { position:relative; min-height:58px; padding:0; border-radius:9px; background:transparent; border:0; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .JobMetricCardInner { position:relative; width:100%; min-height:58px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .JobMetricCard.flipped .JobMetricCardInner { transform:rotateY(180deg); }
+        .JobMetricFace { position:absolute; inset:0; padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
+        .JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
         .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
         .JobMetricCard .value { margin-top:2px; font-size:14px; font-weight:700; color:rgba(0,0,0,.76); }
         @media (max-width:768px) {
@@ -9595,12 +9599,166 @@
                 const assigned=empCounts[i]||0;
                 const hpd=job.hoursPerDay||24;
                 const hourly=job.wage!==null && job.wage!==undefined ? job.wage/24 : 0;
-                const cost=hourly*hpd*assigned;
+                const plannedCount=job.count||1;
+                const plannedCost=hourly*hpd*plannedCount;
+                const hiredCost=hourly*hpd*assigned;
                 const budget=parseFloat(document.getElementById('budgetInput').value)||0;
-                const remaining=budget-cost;
+                const days=Math.max(1,parseInt(document.getElementById('daysInput').value)||1);
+                const dailyBudget=budget/days;
+                const plannedRemaining=dailyBudget-plannedCost;
+                const hiredRemaining=dailyBudget-hiredCost;
+                const money=value => '
+                const info=item.querySelector('.JobTitleInfo');
+                if (info) info.appendChild(cards);
+            });
+        };
+
+        function populateBusinessSelect(selectId) {
+            const sel=document.getElementById(selectId);
+            if (!sel) return;
+            sel.innerHTML='';
+            businessLabels.forEach(b => {
+                const opt=document.createElement('option'); opt.value=String(b.id); opt.textContent=b.name; sel.appendChild(opt);
+            });
+        }
+
+        function openNewFinanceTransactionModal() {
+            if (!businessLabels.length) { alert('Add a business first.'); return; }
+            populateBusinessSelect('financeBusinessSelect');
+            document.getElementById('financeTxType').value='income';
+            document.getElementById('financeTxAmount').value='';
+            document.getElementById('financeTxName').value='';
+            document.getElementById('financeTxDescription').value='';
+            openModal('financeTransaction');
+        }
+
+        function saveFinanceTransaction() {
+            const businessId=Number(document.getElementById('financeBusinessSelect').value);
+            const type=document.getElementById('financeTxType').value;
+            const amount=parseFloat(document.getElementById('financeTxAmount').value)||0;
+            const name=document.getElementById('financeTxName').value.trim();
+            const inGameDay=document.getElementById('financeTxDay').value;
+            const description=document.getElementById('financeTxDescription').value.trim();
+            if (!businessId || !name || amount<=0) return;
+            const now=new Date();
+            const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+            financeRecords.push({id:Date.now(),businessId:businessId,name:name,date:date,inGameDay:inGameDay,description:description,entries:[{id:Date.now()+1,type:type,description:description,amount:amount,category:'Other'}]});
+            saveFinanceRecords();
+            closeModal('financeTransaction');
+            renderFinanceRecordGrid();
+        }
+
+        function renderSimpleFinanceGrid() {
+            const grid=document.getElementById('financeRecordGrid');
+            if (!grid) return;
+            grid.innerHTML='';
+            const sorted=[...financeRecords].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+            sorted.forEach(record => {
+                const biz=businessLabels.find(b=>Number(b.id)===Number(record.businessId));
+                const income=(record.entries||[]).filter(e=>e.type==='income').reduce((s,e)=>s+(e.amount||0),0);
+                const expense=(record.entries||[]).filter(e=>e.type==='expense').reduce((s,e)=>s+(e.amount||0),0);
+                const net=income-expense;
+                const card=document.createElement('div');
+                card.className='RecordCard';
+                card.innerHTML='<div class="RecordCardActions"><button class="StaffCardBtn danger" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,.7);">close</span></button></div><div class="RecordCardTitle">'+escapeHtml(record.name||'Transaction')+'</div><div class="RecordCardMeta">'+escapeHtml(biz?biz.name:'Unassigned business')+' · '+escapeHtml(record.inGameDay||'')+' · '+escapeHtml(record.date||'')+'</div>'+(record.description?'<div style="font-size:12px;color:rgba(0,0,0,.55);margin:6px 0;">'+escapeHtml(record.description)+'</div>':'')+'<div style="font-size:16px;font-weight:700;color:'+(net>=0?'rgba(22,163,74,.9)':'rgba(220,38,38,.9)')+';">'+(net>=0?'+':'-')+'$'+Math.abs(net).toLocaleString()+'</div>';
+                card.querySelector('button').onclick=()=>{ removeFinanceRecord(record.id); renderSimpleFinanceGrid(); };
+                grid.appendChild(card);
+            });
+            if (!sorted.length) grid.innerHTML='<div class="EmptyState"><span class="material-symbols-outlined">receipt_long</span><div>No transactions yet.</div></div>';
+        }
+
+        // ===== INIT =====
+        loadProfiles();
+        loadLabels();
+        loadBusinessLabels();
+        initPermissions();
+        loadPermissions();
+        renderPermissions();
+        loadCustomRanges();
+        loadBusinessJobs();
+        loadEmployees();
+        loadWorkdayRecords();
+        loadFinanceRecords();
+        loadPartnerships();
+        loadInventoryItems();
+        loadOrders();
+        restoreInventoryView();
+        renderLevelDropdown();
+
+        // Restore config fields
+        const savedBudget = localStorage.getItem('bbBudget');
+        if (savedBudget !== null) document.getElementById('budgetInput').value = savedBudget;
+        const savedHpd = localStorage.getItem('bbHoursPerDay');
+        if (savedHpd !== null) document.getElementById('hoursPerDayInput').value = savedHpd;
+        const savedDays = localStorage.getItem('bbDays');
+        if (savedDays !== null) document.getElementById('daysInput').value = savedDays;
+        const savedMode = localStorage.getItem('bbSalaryMode');
+        if (savedMode) setSalaryMode(savedMode);
+
+        recalcWages();
+        renderJobBusinessSelect();
+        renderSimpleFinanceGrid();
+
+        // Restore active page
+        const savedPage = localStorage.getItem('bbActivePage');
+        if (savedPage) switchPage(savedPage);
+
+        // Show Labels button if permissions page is active on load
+        const labelsBtn = document.getElementById('labelsTopBtn');
+        if (labelsBtn && document.getElementById('page-permissions').classList.contains('active')) {
+            labelsBtn.style.display = '';
+        }
+
+        // Start sync if active profile is shared
+        const initProfile = getActiveProfile();
+        if (initProfile && initProfile.type === 'shared' && initProfile.sessionId) {
+            startSync();
+        }
+    </script>
+    <nav class="MobileSystemNav" aria-label="Mobile navigation">
+        <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
+        <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
+    </nav>
+    <script id="MobileSystemNavScript">
+        (() => {
+            const nav = document.querySelector('.MobileSystemNav');
+            if (!nav) return;
+            nav.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-mobile-nav]');
+                if (!button) return;
+                const action = button.dataset.mobileNav;
+                if (action === 'back') {
+                    if (history.length > 1) history.back(); else window.location.href = '../';
+                } else if (action === 'home') window.location.href = '../';
+                else if (action === 'apps') window.location.href = '../#opened-apps';
+            });
+        })();
+    </script>
+</body>
+
+</html>
++value.toLocaleString(undefined,{maximumFractionDigits:2});
                 const cards=document.createElement('div');
                 cards.className='JobMetricCards';
-                cards.innerHTML='<div class="JobMetricCard"><div class="label">Job cost</div><div class="value">$'+cost.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div><div class="JobMetricCard"><div class="label">Remaining</div><div class="value">$'+remaining.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div>';
+                cards.innerHTML=
+                    '<div class="JobMetricCard" role="button" tabindex="0" aria-label="Switch Job cost between planned positions and assigned staff">'+
+                        '<div class="JobMetricCardInner">'+
+                            '<div class="JobMetricFace JobMetricFront"><div class="label">Daily cost</div><div class="value">'+money(plannedCost)+'</div><div class="sub">'+plannedCount+' position'+(plannedCount===1?'':'s')+'</div></div>'+
+                            '<div class="JobMetricFace JobMetricBack"><div class="label">Assigned staff</div><div class="value">'+money(hiredCost)+'</div><div class="sub">'+assigned+' hired</div></div>'+
+                        '</div>'+
+                    '</div>'+
+                    '<div class="JobMetricCard" role="button" tabindex="0" aria-label="Switch Remaining between planned positions and assigned staff">'+
+                        '<div class="JobMetricCardInner">'+
+                            '<div class="JobMetricFace JobMetricFront"><div class="label">Remaining</div><div class="value">'+money(plannedRemaining)+'</div><div class="sub">planned</div></div>'+
+                            '<div class="JobMetricFace JobMetricBack"><div class="label">Remaining</div><div class="value">'+money(hiredRemaining)+'</div><div class="sub">assigned staff</div></div>'+
+                        '</div>'+
+                    '</div>';
+                cards.querySelectorAll('.JobMetricCard').forEach(card => {
+                    const flip=()=>card.classList.toggle('flipped');
+                    card.addEventListener('click',flip);
+                    card.addEventListener('keydown',event=>{ if(event.key==='Enter'||event.key===' '){ event.preventDefault(); flip(); } });
+                });
                 const info=item.querySelector('.JobTitleInfo');
                 if (info) info.appendChild(cards);
             });
