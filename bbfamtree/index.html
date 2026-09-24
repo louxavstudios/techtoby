@@ -693,6 +693,11 @@
         }
     </style>
     <meta name="theme-color" content="#D9D9D9">
+    <style id="LegacyHomeButtonMobileStyles">
+        @media (max-width: 768px) {
+            .LegacyHomeButton { display: none !important; }
+        }
+    </style>
 </head>
 
 <body>
@@ -715,7 +720,7 @@
           style="display: none;">
         <button id="undo_btn" class="GTextBtn" style="opacity: 0.5; pointer-events: none;">↶ Undo</button>
         <button id="redo_btn" class="GTextBtn" style="opacity: 0.5; pointer-events: none;">↷ Redo</button>
-        <button class="GTextBtn" onclick="window.location.href='../'" title="Back to Desktop">
+        <button class="LegacyHomeButton GTextBtn"  onclick="window.location.href='../'" title="Back to Desktop">
           <span class="material-symbols-outlined">home</span>
           Home</button>
       </div>
