@@ -5995,7 +5995,21 @@
             });
         }
 
+        function getCollapsedPermissionCategories() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('bbCollapsedPermissionCategories') || '[]');
+                return new Set(Array.isArray(saved) ? saved : []);
+            } catch (error) {
+                return new Set();
+            }
+        }
+
+        function saveCollapsedPermissionCategories(categories) {
+            localStorage.setItem('bbCollapsedPermissionCategories', JSON.stringify([...categories]));
+        }
+
         function renderPermissions() {
+            const collapsedCategories = getCollapsedPermissionCategories();
             const grid = document.getElementById('permissionGrid');
             grid.innerHTML = '';
             roles.forEach(role => {
@@ -6031,11 +6045,18 @@
                     const cat = permissionTree[category];
                     const block = document.createElement('div');
                     block.className = 'PermCategoryBlock';
+                    const categoryKey = role + '::' + category;
+                    if (collapsedCategories.has(categoryKey)) block.classList.add('collapsed');
                     const toggle = document.createElement('button');
                     toggle.type = 'button';
                     toggle.className = 'PermCategoryToggle';
                     toggle.innerHTML = '<span>' + escapeHtml(category) + '</span><span class="material-symbols-outlined">expand_more</span>';
-                    toggle.onclick = () => block.classList.toggle('collapsed');
+                    toggle.onclick = () => {
+                        block.classList.toggle('collapsed');
+                        if (block.classList.contains('collapsed')) collapsedCategories.add(categoryKey);
+                        else collapsedCategories.delete(categoryKey);
+                        saveCollapsedPermissionCategories(collapsedCategories);
+                    };
                     const body = document.createElement('div');
                     body.className = 'PermCategoryBody';
                     if (cat._perms) cat._perms.forEach(perm => body.appendChild(createPermRow(role, category + '::' + perm, perm)));
