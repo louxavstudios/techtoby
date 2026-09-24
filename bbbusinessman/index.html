@@ -4,7 +4,7 @@
 <head>
     <script src="../account.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bloxburg Business Manager</title>
 
     <link rel="shortcut icon" href="https://cdn.dummtoby.network/assets/100006.png" type="image/x-icon">
@@ -3318,6 +3318,15 @@
     <style id="LegacyHomeButtonMobileStyles">
         @media (max-width: 768px) {
             .LegacyHomeButton { display: none !important; }
+        }
+    </style>
+    <style id="MobileViewportLockStyles">
+        @media (max-width: 768px) {
+            html, body {
+                overscroll-behavior: none;
+                overflow: hidden;
+                touch-action: pan-x pan-y;
+            }
         }
     </style>
 </head>
