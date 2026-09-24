@@ -856,6 +856,40 @@
             .LegacyHomeButton { display: none !important; }
         }
     </style>
+
+    <style id="MobileToggleFix">
+        @media (max-width: 768px) {
+            .ToggleSwitch {
+                flex: 0 0 44px;
+                width: 44px;
+                min-width: 44px;
+                height: 24px;
+            }
+            .ToggleSwitch input {
+                position: absolute;
+                opacity: 0;
+                width: 1px;
+                height: 1px;
+                margin: 0;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+            .ToggleSlider {
+                box-sizing: border-box;
+                width: 44px;
+                height: 24px;
+                inset: 0;
+            }
+            .ToggleSlider::before {
+                box-sizing: border-box;
+                width: 18px;
+                height: 18px;
+                left: 2px;
+                top: 2px;
+                bottom: auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
