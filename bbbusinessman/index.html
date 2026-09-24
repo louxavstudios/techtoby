@@ -3307,17 +3307,25 @@
         .JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
         .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
         .JobMetricCard .value { margin-top:2px; font-size:14px; font-weight:700; color:rgba(0,0,0,.76); }
+        .JobMetricCard .sub { margin-top:2px; font-size:9px; line-height:1.2; color:rgba(0,0,0,.42); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
             .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
             .JobHeaderActions .GTextBtn { min-height:44px; justify-content:center; }
-            .JobTitleItem { display:grid !important; grid-template-columns:1fr auto; gap:10px; align-items:start !important; padding:14px !important; }
-            .JobTitleInfo { min-width:0; }
+            .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) 112px; gap:12px; align-items:start !important; padding:14px !important; min-height:0; }
+            .JobTitleInfo { min-width:0; width:100%; }
             .JobTitleName { font-size:17px !important; line-height:1.2; }
             .JobTitleLevel { line-height:1.35; margin-top:4px; }
-            .JobTitleActions { display:grid !important; grid-template-columns:repeat(2,auto); justify-content:end; gap:8px !important; }
-            .JobTitleActions > div[style*="text-align"] { grid-column:1 / -1; }
-            .JobMetricCards { grid-template-columns:1fr 1fr; }
+            .JobTitleActions { width:112px; display:grid !important; grid-template-columns:repeat(2,36px); justify-content:end; align-content:start; gap:8px !important; }
+            .JobTitleActions > div[style*="text-align"] { grid-column:1 / -1; min-width:0 !important; width:112px; }
+            .JobTitleWage { min-width:0 !important; width:112px; font-size:16px !important; }
+            .JobTotalCost { white-space:normal; line-height:1.25; }
+            .JobMetricCards { grid-template-columns:minmax(0,1fr) minmax(0,1fr); width:100%; gap:6px; margin-top:8px; }
+            .JobMetricCard, .JobMetricCardInner { min-height:66px; }
+            .JobMetricFace { padding:8px 9px; overflow:hidden; }
+            .JobMetricCard .value { font-size:14px; line-height:1.15; white-space:nowrap; }
+            .JobMetricCard .sub { font-size:9px; }
+            .FilledBar { max-width:100%; }
             .PermCategoryToggle { min-height:42px; }
         }
     </style>
