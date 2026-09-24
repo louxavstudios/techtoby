@@ -3295,19 +3295,19 @@
         .PermCategoryBlock.collapsed .PermCategoryToggle .material-symbols-outlined { transform:rotate(-90deg); }
         .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
-        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:6px; margin-top:8px; }
-        .JobMetricCard { position:relative; height:76px; min-height:76px; padding:0; border-radius:9px; background:transparent; border:0; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-        .JobMetricCardInner { position:relative; width:100%; height:100%; min-height:76px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
-        .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); }
+        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; width:100%; }
+        .JobMetricCard { position:relative; height:82px; min-width:0; padding:0; border-radius:12px; background:rgba(255,255,255,.38); border:1px solid rgba(255,255,255,.58); cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; transform:rotateY(0deg); transition:transform .18s ease; }
+        .JobMetricCard.flipping { transform:rotateY(90deg); }
+        .JobMetricFace { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:10px 12px; box-sizing:border-box; }
+        .JobMetricFace[hidden] { display:none !important; }
+        .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
+        .JobMetricCard .value { margin-top:2px; font-size:16px; line-height:1.15; font-weight:700; color:rgba(0,0,0,.76); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .JobMetricCard .sub { margin-top:4px; font-size:10px; line-height:1.15; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
         .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); }
         .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
         .SummaryFlipBack { transform:rotateY(180deg); }
-        .JobMetricFace { position:absolute; inset:0; padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
-        .JobMetricBack, .JobMetricFace.JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
-        .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
-        .JobMetricCard .value { margin-top:2px; font-size:14px; font-weight:700; color:rgba(0,0,0,.76); }
-        .JobMetricCard .sub { margin-top:4px; font-size:10px; line-height:1.2; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
             .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
@@ -9630,40 +9630,64 @@
                 if (emp.jobIndex === null || emp.jobIndex === undefined) return;
                 empCounts[emp.jobIndex] = (empCounts[emp.jobIndex] || 0) + 1;
             });
+
             document.querySelectorAll('#jobTitleList .JobTitleItem').forEach((item, i) => {
                 const job = jobTitles[i];
                 if (!job || item.classList.contains('editing')) return;
+
                 const assigned = empCounts[i] || 0;
                 const hpd = job.hoursPerDay || 24;
                 const hourly = job.wage !== null && job.wage !== undefined ? job.wage / 24 : 0;
                 const plannedCount = job.count || 1;
                 const plannedCost = hourly * hpd * plannedCount;
-                const hiredCost = hourly * hpd * assigned;
+                const assignedCost = hourly * hpd * assigned;
                 const budget = parseFloat(document.getElementById('budgetInput').value) || 0;
                 const days = Math.max(1, parseInt(document.getElementById('daysInput').value) || 1);
                 const dailyBudget = budget / days;
                 const plannedRemaining = dailyBudget - plannedCost;
-                const hiredRemaining = dailyBudget - hiredCost;
+                const assignedRemaining = dailyBudget - assignedCost;
                 const money = value => '$' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+
                 const cards = document.createElement('div');
                 cards.className = 'JobMetricCards';
-                cards.innerHTML =
-                    '<div class="JobMetricCard flipped" role="button" tabindex="0" aria-label="Showing assigned staff. Tap to show planned positions."><div class="JobMetricCardInner">' +
-                    '<div class="JobMetricFace JobMetricFront"><div class="label">Daily Cost</div><div class="value">' + money(plannedCost) + '</div><div class="sub">' + plannedCount + ' position' + (plannedCount === 1 ? '' : 's') + '</div></div>' +
-                    '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Daily Cost</div><div class="value">' + money(hiredCost) + '</div><div class="sub">' + assigned + ' assigned staff</div></div></div></div>' +
-                    '<div class="JobMetricCard flipped" role="button" tabindex="0" aria-label="Showing assigned staff. Tap to show planned positions."><div class="JobMetricCardInner">' +
-                    '<div class="JobMetricFace JobMetricFront"><div class="label">Remaining</div><div class="value">' + money(plannedRemaining) + '</div><div class="sub">planned positions</div></div>' +
-                    '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Remaining</div><div class="value">' + money(hiredRemaining) + '</div><div class="sub">assigned staff</div></div></div></div>';
-                cards.querySelectorAll('.JobMetricCard').forEach(card => {
-                    const flip = () => card.classList.toggle('flipped');
-                    card.addEventListener('click', flip);
-                    card.addEventListener('keydown', event => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            flip();
-                        }
+
+                const makeMetricCard = (label, assignedValue, assignedSub, plannedValue, plannedSub) => {
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'JobMetricCard';
+                    card.dataset.mode = 'assigned';
+                    card.setAttribute('aria-label', label + ': showing assigned staff. Tap to show planned positions.');
+
+                    const assignedFace = document.createElement('div');
+                    assignedFace.className = 'JobMetricFace';
+                    assignedFace.innerHTML = '<div class="label">' + label + '</div><div class="value">' + assignedValue + '</div><div class="sub">' + assignedSub + '</div>';
+
+                    const plannedFace = document.createElement('div');
+                    plannedFace.className = 'JobMetricFace';
+                    plannedFace.hidden = true;
+                    plannedFace.innerHTML = '<div class="label">' + label + '</div><div class="value">' + plannedValue + '</div><div class="sub">' + plannedSub + '</div>';
+
+                    card.appendChild(assignedFace);
+                    card.appendChild(plannedFace);
+
+                    card.addEventListener('click', () => {
+                        if (card.classList.contains('flipping')) return;
+                        card.classList.add('flipping');
+                        window.setTimeout(() => {
+                            const showPlanned = card.dataset.mode === 'assigned';
+                            card.dataset.mode = showPlanned ? 'planned' : 'assigned';
+                            assignedFace.hidden = showPlanned;
+                            plannedFace.hidden = !showPlanned;
+                            card.setAttribute('aria-label', label + ': showing ' + (showPlanned ? 'planned positions' : 'assigned staff') + '. Tap to switch.');
+                            card.classList.remove('flipping');
+                        }, 180);
                     });
-                });
+                    return card;
+                };
+
+                cards.appendChild(makeMetricCard('Daily Cost', money(assignedCost), assigned + ' assigned staff', money(plannedCost), plannedCount + ' planned position' + (plannedCount === 1 ? '' : 's')));
+                cards.appendChild(makeMetricCard('Remaining', money(assignedRemaining), 'based on assigned staff', money(plannedRemaining), 'based on planned positions'));
+
                 const info = item.querySelector('.JobTitleInfo');
                 if (info) info.appendChild(cards);
             });
