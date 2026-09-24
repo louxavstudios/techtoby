@@ -21,29 +21,23 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        html, body {
-            position: fixed;
-            inset: 0;
-            width: 100svw;
-            height: 100svh;
-            max-width: 100svw;
-            max-height: 100svh;
-            overflow: hidden;
-            overscroll-behavior: none;
-            -webkit-overflow-scrolling: auto;
-        }
-
         html {
+            width: 100%;
+            min-height: 100%;
             background-color: #D9D9D9;
             background-image: url('https://cdn.dummtoby.network/assets/100001.png');
             background-position: center bottom;
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            overflow: hidden;
         }
 
         body {
+            width: 100vw;
+            height: 100vh;
             margin: 0;
+            overflow: hidden;
             background: transparent;
             display: flex;
             flex-direction: column;
@@ -403,7 +397,7 @@
             display: none;
             top: 0;
             left: 0;
-            width: 100svw;   
+            width: 100vw;   
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -427,8 +421,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100svw;
-            height: 100svh;
+            width: 100vw;
+            height: 100vh;
             z-index: 0;
             opacity: 0;
             transition: opacity 0.25s ease-out;
@@ -708,16 +702,15 @@
 
         @media (max-width: 768px) {
             html, body {
-                position: fixed;
-                inset: 0;
-                width: 100svw;
-                height: 100svh;
-                touch-action: manipulation;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+                overscroll-behavior: none;
             }
 
             body::before {
-                width: 100svw;
-                height: 100svh;
+                width: 100vw;
+                height: 100vh;
             }
 
             .app-icon.mobile-disabled {
