@@ -6234,6 +6234,8 @@
         function getJobEmployeeCounts() {
             const counts = {};
             employees.forEach(emp => {
+                if (typeof activeJobBusinessId !== 'undefined' && activeJobBusinessId !== null &&
+                    String(emp.businessLabelId) !== String(activeJobBusinessId)) return;
                 if (emp.jobIndex !== null && emp.jobIndex !== undefined) {
                     counts[emp.jobIndex] = (counts[emp.jobIndex] || 0) + 1;
                 }
@@ -7592,12 +7594,14 @@
             saveEmployees();
             closeModal('addEmployee');
             renderStaffGrid();
+            recalcWages();
         }
 
         function removeEmployee(index) {
             employees.splice(index, 1);
             saveEmployees();
             renderStaffGrid();
+            recalcWages();
         }
 
         function renderStaffBusinessFilter() {
@@ -9494,6 +9498,7 @@
             activeJobBusinessId = preferred || null;
             if (activeJobBusinessId && !jobsByBusiness[activeJobBusinessId] && Array.isArray(legacy) && legacy.length) {
                 jobsByBusiness[activeJobBusinessId] = legacy;
+                localStorage.setItem('bbBusinessJobsByBusiness', JSON.stringify(jobsByBusiness));
             }
             jobTitles = activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
         }
@@ -9519,6 +9524,7 @@
                 activeJobBusinessId=String(businessLabels[0].id);
             }
             sel.value=activeJobBusinessId;
+            localStorage.setItem('bbActiveJobBusinessId', activeJobBusinessId || '');
             jobTitles=jobsByBusiness[activeJobBusinessId] || [];
             recalcWages();
         }
@@ -9641,7 +9647,7 @@
         loadPermissions();
         renderPermissions();
         loadCustomRanges();
-        loadJobTitles();
+        loadBusinessJobs();
         loadEmployees();
         loadWorkdayRecords();
         loadFinanceRecords();
