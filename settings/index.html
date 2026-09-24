@@ -851,13 +851,18 @@
         }
     </style>
     <meta name="theme-color" content="#D9D9D9">
+    <style id="LegacyHomeButtonMobileStyles">
+        @media (max-width: 768px) {
+            .LegacyHomeButton { display: none !important; }
+        }
+    </style>
 </head>
 
 <body>
     <div class="gridOverlay"></div>
 
     <div class="TopButtons">
-        <button class="GTextBtn" onclick="window.location.href='../'" title="Back to Desktop">
+        <button class="LegacyHomeButton GTextBtn"  onclick="window.location.href='../'" title="Back to Desktop">
             <span class="material-symbols-outlined">home</span>
             Home
         </button>
