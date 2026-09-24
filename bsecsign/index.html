@@ -1304,6 +1304,33 @@
             .toast { width: 100%; }
         }
     </style>
+    <style id="MobileSystemNavStyles">
+        .MobileSystemNav { display: none; }
+        @media (max-width: 768px) {
+            .MobileSystemNav {
+                position: fixed; left: 0; right: 0; bottom: 0; z-index: 999998;
+                height: calc(58px + env(safe-area-inset-bottom));
+                padding: 0 18px env(safe-area-inset-bottom);
+                display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
+                background: rgba(232, 232, 232, 0.72);
+                border-top: 1px solid rgba(255,255,255,.55);
+                backdrop-filter: blur(22px) saturate(145%);
+                -webkit-backdrop-filter: blur(22px) saturate(145%);
+                box-shadow: 0 -6px 24px rgba(0,0,0,.08);
+            }
+            .MobileSystemNav button {
+                appearance: none; -webkit-appearance: none; width: 52px; height: 48px;
+                margin: 0 auto; padding: 0; border: 0; background: transparent;
+                color: rgba(0,0,0,.72); display: grid; place-items: center; cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .MobileSystemNav button:active { opacity: .45; }
+            .MobileSystemNav svg {
+                width: 23px; height: 23px; display: block; fill: none; stroke: currentColor;
+                stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round;
+            }
+        }
+    </style>
 </head>
 <body>
     <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png">
@@ -2963,6 +2990,26 @@
             document.getElementById('cfg-detail-val').textContent = `${cfg.cols} wide`;
             document.getElementById('cfg-threshold-val').textContent = `${Math.round(cfg.threshold * 100)}%`;
         }
+    </script>
+    <nav class="MobileSystemNav" aria-label="Mobile navigation">
+        <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
+        <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
+    </nav>
+    <script id="MobileSystemNavScript">
+        (() => {
+            const nav = document.querySelector('.MobileSystemNav');
+            if (!nav) return;
+            nav.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-mobile-nav]');
+                if (!button) return;
+                const action = button.dataset.mobileNav;
+                if (action === 'back') {
+                    if (history.length > 1) history.back(); else window.location.href = '../';
+                } else if (action === 'home') window.location.href = '../';
+                else if (action === 'apps') window.location.href = '../#opened-apps';
+            });
+        })();
     </script>
 </body>
 </html>
