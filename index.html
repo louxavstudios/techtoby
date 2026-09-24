@@ -42,11 +42,15 @@
         body::before {
             content: '';
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
             width: 100vw;
-            height: 100dvh;
+            height: 100lvh;
             min-height: 100vh;
-            background: url('https://cdn.dummtoby.network/assets/100001.png') center/cover no-repeat;
+            background-image: url('https://cdn.dummtoby.network/assets/100001.png');
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
             z-index: -1;
             pointer-events: none;
         }
