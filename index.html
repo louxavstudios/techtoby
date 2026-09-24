@@ -152,6 +152,23 @@
             transform: scale(1.05);
         }
 
+        .SafariGlassFooter {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: calc(72px + env(safe-area-inset-bottom));
+            background: rgba(255, 255, 255, 0.28);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+            z-index: 90;
+            pointer-events: none;
+        }
+
+        .credits, .bloxburg-logo { z-index: 5; }
+
         /* Context Menu */
         .ContextMenu {
             position: absolute;
@@ -702,6 +719,9 @@
                 font-weight: 600;
                 opacity: 0.65;
             }
+
+            .desktop { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+            .SafariGlassFooter { height: calc(82px + env(safe-area-inset-bottom)); }
         }
     </style>
 </head>
@@ -752,6 +772,7 @@
     <a href="https://www.roblox.com/games/185655149/" target="_blank">
         <img src="https://cdn.dummtoby.network/assets/100002.png" alt="Welcome to Bloxburg" class="bloxburg-logo" style="pointer-events: auto; cursor: pointer; transition: transform 0.2s;">
     </a>
+    <div class="SafariGlassFooter" aria-hidden="true"></div>
 
     <!-- Get Started Guide -->
     <div class="GuideOverlay" id="guideOverlay">
@@ -793,7 +814,10 @@
                     a.draggable = !is_mobile;
                     a.dataset.appId = app.name;
 
-                    if (is_mobile) {
+                    const mobile_enabled_apps = ['bbmural', 'bsecsign', 'settings'];
+                    const is_mobile_enabled = mobile_enabled_apps.includes(app.name);
+
+                    if (is_mobile && !is_mobile_enabled) {
                         a.classList.add('mobile-disabled');
                         a.setAttribute('aria-disabled', 'true');
                         a.title = 'This app is currently unavailable on mobile.';
@@ -833,7 +857,7 @@
 
                     const mobile_app_status = document.createElement('div');
                     mobile_app_status.className = 'mobile-app-status';
-                    mobile_app_status.textContent = 'Desktop only';
+                    mobile_app_status.textContent = is_mobile_enabled ? '' : 'Desktop only';
                     
                     a.appendChild(iconImg);
                     a.appendChild(appName);
@@ -859,7 +883,7 @@
                     a.addEventListener('click', (e) => {
                         document.getElementById('appTooltip').classList.remove('show');
 
-                        if (is_mobile) {
+                        if (is_mobile && !is_mobile_enabled) {
                             e.preventDefault();
                             openModal(
                                 'Desktop only',
