@@ -1332,6 +1332,11 @@
         }
     </style>
     <meta name="theme-color" content="#D9D9D9">
+    <style id="LegacyHomeButtonMobileStyles">
+        @media (max-width: 768px) {
+            .LegacyHomeButton { display: none !important; }
+        }
+    </style>
 </head>
 <body>
     <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png">
@@ -1492,7 +1497,7 @@
                 <button class="btn btn-secondary btn-icon" onclick="toggleSettingsModal(true)" title="Settings">
                     <span class="material-symbols-outlined">settings</span>
                 </button>
-                <button class="btn btn-secondary btn-icon" onclick="window.location.href='../'" title="Back to Desktop">
+                <button class="LegacyHomeButton btn btn-secondary btn-icon"  onclick="window.location.href='../'" title="Back to Desktop">
                     <span class="material-symbols-outlined">home</span>
                 </button>
             </div>
