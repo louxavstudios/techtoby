@@ -1060,12 +1060,6 @@
         }
     </style>
     <style>
-        @media (max-width: 768px) {
-            .MobileBlock { display: flex !important; }
-            body > *:not(.MobileBlock) { display: none !important; }
-        }
-    </style>
-    <style>
         /* ========== SIGN GENERATOR SPECIFIC ========== */
         .mode-toggle {
             display: inline-flex;
@@ -1279,16 +1273,39 @@
             background: rgba(255, 255, 255, 0.45);
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
+        @media (max-width: 768px) {
+            .full-container { padding: 0; height: 100dvh; }
+            .app-window { max-height: none; border-radius: 0; border-left: 0; border-right: 0; }
+            .timeline-header { padding: 12px; gap: 10px; align-items: flex-start; }
+            .timeline-left { min-width: 0; flex: 1; gap: 10px; }
+            .timeline-title { font-size: 16px; }
+            .timeline { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+            .timeline::-webkit-scrollbar { display: none; }
+            .timeline-step { flex: 0 0 auto; padding: 8px 10px; gap: 6px; }
+            .step-label { font-size: 12px; }
+            .main-content { padding: 18px 14px calc(100px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+            .section-title { font-size: 20px; }
+            .mode-toggle { width: 100%; }
+            .mode-toggle button { flex: 1; justify-content: center; padding: 10px 8px; }
+            .field-row { flex-direction: column; align-items: stretch; }
+            .field { width: 100%; min-width: 0; }
+            .inline-switches { height: auto; flex-wrap: wrap; }
+            .range-row { gap: 8px; }
+            .range-val { min-width: 58px; font-size: 12px; }
+            .chart-wrap { padding: 10px; max-height: 48vh; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
+            .parts-table { min-width: 620px; }
+            .card:has(.parts-table) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .action-bar, .export-header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .export-header > div:last-child { display: grid !important; grid-template-columns: 1fr 1fr; }
+            .action-bar-left, .action-bar-right { flex-wrap: wrap; }
+            .action-bar .btn, .export-header .btn { min-height: 44px; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .toast-container { left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom)); }
+            .toast { width: 100%; }
+        }
     </style>
 </head>
 <body>
-    <div class="MobileBlock" style="display:none;position:fixed;inset:0;z-index:999999;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;font-family:'Roboto',sans-serif;">
-        <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.1);">
-            <span style="font-size:48px;display:block;margin-bottom:16px;">🖥️</span>
-            <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:rgba(0,0,0,0.8);">Desktop Only</h2>
-            <p style="font-size:14px;color:rgba(0,0,0,0.5);line-height:1.6;">Sorry, this site is currently only available on desktop devices.</p>
-        </div>
-    </div>
     <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png">
     <div id="gridOverlay" class="gridOverlay"></div>
 
