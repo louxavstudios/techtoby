@@ -9749,7 +9749,6 @@
         loadBusinessLabels();
         initPermissions();
         loadPermissions();
-        renderPermissions();
         loadCustomRanges();
         loadBusinessJobs();
         loadEmployees();
@@ -9760,6 +9759,9 @@
         loadOrders();
         restoreInventoryView();
         renderLevelDropdown();
+        // Render the permission tree only after every Business Manager module and
+        // its state declarations have finished initializing.
+        renderPermissions();
 
         // Restore config fields
         const savedBudget = localStorage.getItem('bbBudget');
