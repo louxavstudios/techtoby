@@ -3296,7 +3296,7 @@
         .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
         .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:8px; margin-top:10px; }
-        .JobMetricCard { appearance:none; -webkit-appearance:none; position:relative; display:block; width:100%; height:76px; min-height:76px; margin:0; padding:0; border-radius:10px; background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.55); perspective:800px; cursor:pointer; overflow:hidden; text-align:left; font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; }
+        .JobMetricCard { appearance:none; -webkit-appearance:none; position:relative; display:block; width:100%; height:76px; min-height:76px; margin:0; padding:0; border-radius:10px; background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.55); perspective:800px; cursor:pointer; overflow:hidden; text-align:left; font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
         .JobMetricCardInner { position:relative; width:100%; height:100%; transition:transform .38s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
         .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
         .JobMetricFace { position:absolute; inset:0; padding:9px 10px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; border-radius:10px; background:rgba(255,255,255,.32); box-sizing:border-box; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); }
@@ -9671,7 +9671,6 @@
                         card.setAttribute('aria-label', label + ': showing ' + (planned ? 'planned positions' : 'assigned staff') + '. Tap to switch.');
                     };
                     card.setAttribute('aria-label', label + ': showing assigned staff. Tap to show planned positions.');
-                    card.addEventListener('click', flip);
                     card.addEventListener('keydown', event => {
                         if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
@@ -9681,13 +9680,29 @@
                     return card;
                 };
 
-                cards.appendChild(makeMetricCard('Daily Cost', money(assignedCost), assigned + ' assigned staff', money(plannedCost), plannedCount + ' planned position' + (plannedCount === 1 ? '' : 's')));
-                cards.appendChild(makeMetricCard('Remaining', money(assignedRemaining), 'after this job’s assigned staff', money(plannedRemaining), 'after this job’s planned positions'));
+                cards.appendChild(makeMetricCard('Daily Cost', money(assignedCost), assigned + ' assigned staff', money(plannedCost), plannedCount + ' total employee position' + (plannedCount === 1 ? '' : 's')));
+                cards.appendChild(makeMetricCard('Remaining', money(assignedRemaining), 'after this job’s assigned staff', money(plannedRemaining), 'for all employee positions'));
 
                 const info = item.querySelector('.JobTitleInfo');
                 if (info) info.appendChild(cards);
             });
         };
+
+        function toggleJobMetricCard(card) {
+            if (!card) return;
+            const planned = card.dataset.mode === 'assigned';
+            card.dataset.mode = planned ? 'planned' : 'assigned';
+            card.classList.toggle('flipped', planned);
+            const label = card.querySelector('.label')?.textContent || 'Metric';
+            card.setAttribute('aria-label', label + ': showing ' + (planned ? 'all planned employees' : 'assigned staff') + '. Tap to switch.');
+        }
+
+        document.addEventListener('pointerup', event => {
+            const card = event.target.closest('.JobMetricCard');
+            if (!card) return;
+            event.preventDefault();
+            toggleJobMetricCard(card);
+        }, { passive: false });
 
         function populateBusinessSelect(selectId) {
             const sel=document.getElementById(selectId);
