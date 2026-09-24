@@ -3296,23 +3296,23 @@
         .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
         .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:6px; margin-top:8px; }
-        .JobMetricCard { position:relative; min-height:58px; padding:0; border-radius:9px; background:transparent; border:0; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-        .JobMetricCardInner { position:relative; width:100%; min-height:58px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .JobMetricCard { position:relative; height:76px; min-height:76px; padding:0; border-radius:9px; background:transparent; border:0; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .JobMetricCardInner { position:relative; width:100%; height:100%; min-height:76px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
         .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); }
         .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
         .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
         .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
         .SummaryFlipBack { transform:rotateY(180deg); }
         .JobMetricFace { position:absolute; inset:0; padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
-        .JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
+        .JobMetricBack, .JobMetricFace.JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
         .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
         .JobMetricCard .value { margin-top:2px; font-size:14px; font-weight:700; color:rgba(0,0,0,.76); }
-        .JobMetricCard .sub { margin-top:2px; font-size:9px; line-height:1.2; color:rgba(0,0,0,.42); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .JobMetricCard .sub { margin-top:4px; font-size:10px; line-height:1.2; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
             .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
             .JobHeaderActions .GTextBtn { min-height:44px; justify-content:center; }
-            .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) 112px; gap:12px; align-items:start !important; padding:14px !important; min-height:0; }
+            .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) 112px; gap:12px; align-items:start !important; padding:14px !important; min-height:0; overflow:hidden; }
             .JobTitleInfo { min-width:0; width:100%; display:grid; grid-template-columns:1fr; }
             .JobTitleInfo > .JobMetricCards { grid-column:1 / -1; }
             .JobTitleActions { align-self:start; }
