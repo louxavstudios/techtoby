@@ -3149,10 +3149,142 @@
             }
         }
     </style>
-    <style>
+    <style id="BusinessManagerMobile">
         @media (max-width: 768px) {
-            .MobileBlock { display: flex !important; }
-            body > *:not(.MobileBlock) { display: none !important; }
+            html, body {
+                width: 100%;
+                height: 100dvh;
+                overflow: hidden;
+                overscroll-behavior: none;
+            }
+            .MainLayout {
+                height: 100dvh;
+                padding: 58px 0 calc(126px + env(safe-area-inset-bottom));
+                flex-direction: column;
+            }
+            .TopButtons {
+                position: fixed;
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                z-index: 200;
+                gap: 6px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                scrollbar-width: none;
+            }
+            .TopButtons::-webkit-scrollbar { display: none; }
+            .TopButtons .GTextBtn, .ProfileBar {
+                flex: 0 0 auto;
+                min-height: 42px;
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            .ProfileBar { max-width: 150px; }
+            .Sidebar {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: calc(58px + env(safe-area-inset-bottom));
+                z-index: 999997;
+                width: 100%;
+                height: 68px;
+                margin: 0;
+                padding: 6px 8px;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                gap: 4px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+                background: #D9D9D9;
+                box-shadow: 0 -5px 18px rgba(0,0,0,.06);
+                scrollbar-width: none;
+            }
+            .Sidebar::-webkit-scrollbar { display: none; }
+            .SidebarCategory {
+                display: contents;
+            }
+            .SidebarCategoryHeader {
+                display: none;
+            }
+            .SidebarCategory + .SidebarCategory {
+                margin: 0;
+                padding: 0;
+                border: 0;
+            }
+            .SidebarTab {
+                flex: 0 0 auto;
+                min-width: 68px;
+                min-height: 54px;
+                padding: 5px 8px;
+                justify-content: center;
+                flex-direction: column;
+                gap: 2px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                font-size: 10px;
+                text-align: center;
+                line-height: 1.1;
+            }
+            .SidebarTab .material-symbols-outlined { font-size: 20px !important; }
+            .SidebarTab.active { background: rgba(255,255,255,.58); }
+            .ContentArea {
+                width: auto;
+                margin: 0 8px 8px;
+                padding: 14px;
+                min-height: 0;
+                border-radius: 14px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .PermissionGrid, .StaffGrid, .RecordGrid, .PartnerGrid, .InventoryGrid, .OrderGrid {
+                grid-template-columns: 1fr !important;
+            }
+            .InputRow { flex-direction: column; align-items: stretch; }
+            .InputRow > *, .InputRow .form-group, .InputRow .InputGroup {
+                width: 100% !important;
+                max-width: none !important;
+            }
+            .TopBar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .TopBar > *, .TopBar input[type="text"], .TopBar input[type="search"] {
+                width: 100%;
+                max-width: none;
+            }
+            .ModalOverlay {
+                padding: 12px 12px calc(70px + env(safe-area-inset-bottom));
+            }
+            .ModalOverlay .ModalContent {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                max-height: calc(100dvh - 100px);
+                margin: 0;
+                padding: 18px;
+                border-radius: 16px;
+            }
+            .ProfilePanel {
+                width: 100%;
+                max-width: 100%;
+                padding-bottom: calc(70px + env(safe-area-inset-bottom));
+            }
+            .HelpPopover {
+                bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+            }
+            .ConverterCard { padding: 14px; }
+            button, input, select, textarea { font-size: 16px; }
+            .GTextBtn { font-size: 12px; }
         }
     </style>
     <style id="MobileSystemNavStyles">
@@ -3190,15 +3322,7 @@
     </style>
 </head>
 
-<body>
-    <div class="MobileBlock" style="display:none;position:fixed;inset:0;z-index:999999;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;font-family:'Roboto',sans-serif;">
-        <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.1);">
-            <span style="font-size:48px;display:block;margin-bottom:16px;">🖥️</span>
-            <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:rgba(0,0,0,0.8);">Desktop Only</h2>
-            <p style="font-size:14px;color:rgba(0,0,0,0.5);line-height:1.6;">Sorry, this site is currently only available on desktop devices.</p>
-        </div>
-    </div>
-    <div class="gridOverlay"></div>
+<body><div class="gridOverlay"></div>
 
     <div class="TopButtons">
         <div class="ProfileBar" onclick="toggleProfilePanel()" id="profileBarBtn">
