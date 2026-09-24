@@ -9618,24 +9618,43 @@
             employees.forEach(emp => {
                 if (String(emp.businessLabelId) !== String(activeJobBusinessId)) return;
                 if (emp.jobIndex === null || emp.jobIndex === undefined) return;
-                empCounts[emp.jobIndex]=(empCounts[emp.jobIndex]||0)+1;
+                empCounts[emp.jobIndex] = (empCounts[emp.jobIndex] || 0) + 1;
             });
-            document.querySelectorAll('#jobTitleList .JobTitleItem').forEach((item,i) => {
-                const job=jobTitles[i];
+            document.querySelectorAll('#jobTitleList .JobTitleItem').forEach((item, i) => {
+                const job = jobTitles[i];
                 if (!job || item.classList.contains('editing')) return;
-                const assigned=empCounts[i]||0;
-                const hpd=job.hoursPerDay||24;
-                const hourly=job.wage!==null && job.wage!==undefined ? job.wage/24 : 0;
-                const plannedCount=job.count||1;
-                const plannedCost=hourly*hpd*plannedCount;
-                const hiredCost=hourly*hpd*assigned;
-                const budget=parseFloat(document.getElementById('budgetInput').value)||0;
-                const days=Math.max(1,parseInt(document.getElementById('daysInput').value)||1);
-                const dailyBudget=budget/days;
-                const plannedRemaining=dailyBudget-plannedCost;
-                const hiredRemaining=dailyBudget-hiredCost;
-                const money=value => '
-                const info=item.querySelector('.JobTitleInfo');
+                const assigned = empCounts[i] || 0;
+                const hpd = job.hoursPerDay || 24;
+                const hourly = job.wage !== null && job.wage !== undefined ? job.wage / 24 : 0;
+                const plannedCount = job.count || 1;
+                const plannedCost = hourly * hpd * plannedCount;
+                const hiredCost = hourly * hpd * assigned;
+                const budget = parseFloat(document.getElementById('budgetInput').value) || 0;
+                const days = Math.max(1, parseInt(document.getElementById('daysInput').value) || 1);
+                const dailyBudget = budget / days;
+                const plannedRemaining = dailyBudget - plannedCost;
+                const hiredRemaining = dailyBudget - hiredCost;
+                const money = value => '$' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+                const cards = document.createElement('div');
+                cards.className = 'JobMetricCards';
+                cards.innerHTML =
+                    '<div class="JobMetricCard flipped" role="button" tabindex="0"><div class="JobMetricCardInner">' +
+                    '<div class="JobMetricFace JobMetricFront"><div class="label">Daily Cost</div><div class="value">' + money(plannedCost) + '</div><div class="sub">' + plannedCount + ' position' + (plannedCount === 1 ? '' : 's') + '</div></div>' +
+                    '<div class="JobMetricFace JobMetricBack"><div class="label">Daily Cost</div><div class="value">' + money(hiredCost) + '</div><div class="sub">' + assigned + ' assigned staff</div></div></div></div>' +
+                    '<div class="JobMetricCard flipped" role="button" tabindex="0"><div class="JobMetricCardInner">' +
+                    '<div class="JobMetricFace JobMetricFront"><div class="label">Remaining</div><div class="value">' + money(plannedRemaining) + '</div><div class="sub">planned positions</div></div>' +
+                    '<div class="JobMetricFace JobMetricBack"><div class="label">Remaining</div><div class="value">' + money(hiredRemaining) + '</div><div class="sub">assigned staff</div></div></div></div>';
+                cards.querySelectorAll('.JobMetricCard').forEach(card => {
+                    const flip = () => card.classList.toggle('flipped');
+                    card.addEventListener('click', flip);
+                    card.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            flip();
+                        }
+                    });
+                });
+                const info = item.querySelector('.JobTitleInfo');
                 if (info) info.appendChild(cards);
             });
         };
