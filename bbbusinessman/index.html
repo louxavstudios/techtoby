@@ -6608,8 +6608,17 @@
         let roleLabels = {};
 
         function loadLabels() {
-            permLabels = JSON.parse(localStorage.getItem('bbPermLabels') || '{}');
-            roleLabels = JSON.parse(localStorage.getItem('bbRoleLabels') || '{}');
+            try {
+                const savedLabels = JSON.parse(localStorage.getItem('bbPermLabels') || '[]');
+                const savedRoleLabels = JSON.parse(localStorage.getItem('bbRoleLabels') || '{}');
+                permLabels = Array.isArray(savedLabels) ? savedLabels : [];
+                roleLabels = savedRoleLabels && typeof savedRoleLabels === 'object' && !Array.isArray(savedRoleLabels)
+                    ? savedRoleLabels
+                    : {};
+            } catch (error) {
+                permLabels = [];
+                roleLabels = {};
+            }
         }
 
         function saveLabels() {
@@ -6632,9 +6641,11 @@
         }
 
         function addLabel() {
+            if (!Array.isArray(permLabels)) permLabels = [];
             permLabels.push({ id: Date.now(), name: 'New Label', color: '#6366f1' });
             saveLabels();
             renderLabelEditor();
+            renderPermissions();
         }
 
         function removeLabel(id) {
@@ -6658,6 +6669,8 @@
 
         function renderLabelEditor() {
             const list = document.getElementById('labelEditorList');
+            if (!list) return;
+            if (!Array.isArray(permLabels)) permLabels = [];
             list.innerHTML = '';
             if (permLabels.length === 0) {
                 list.innerHTML = '<div class="EmptyState" style="padding: 20px;"><span class="material-symbols-outlined" style="font-size: 32px; margin-bottom: 8px;">label_off</span><div>No labels yet. Add one to get started.</div></div>';
