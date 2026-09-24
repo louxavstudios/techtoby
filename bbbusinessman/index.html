@@ -3287,34 +3287,30 @@
             .GTextBtn { font-size: 12px; }
         }
     </style>
-        <style id="BusinessManagerV141">
-        .PermCategorySection { border-top:1px solid rgba(0,0,0,.06); }
-        .PermCategoryToggle { width:100%; border:0; background:transparent; display:flex; align-items:center; justify-content:space-between; padding:10px 0 6px; cursor:pointer; font:inherit; color:inherit; }
-        .PermCategoryToggle .PermCategory { margin:0; }
-        .PermCategoryBody.collapsed { display:none; }
-        .PermCategoryChevron { transition:transform .2s ease; font-size:18px; }
-        .PermCategorySection.collapsed .PermCategoryChevron { transform:rotate(-90deg); }
-        .JobBusinessBar { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
-        .JobBusinessBar .form-group { min-width:220px; }
+        <style id="BusinessManagerTodoStyles">
+        .PermCategoryBlock { border-top:1px solid rgba(0,0,0,.06); }
+        .PermCategoryToggle { width:100%; border:0; background:transparent; padding:8px 0; display:flex; align-items:center; justify-content:space-between; font:inherit; font-size:12px; font-weight:700; color:rgba(0,0,0,.6); cursor:pointer; text-align:left; }
+        .PermCategoryToggle .material-symbols-outlined { font-size:18px; transition:transform .18s ease; }
+        .PermCategoryBlock.collapsed .PermCategoryBody { display:none; }
+        .PermCategoryBlock.collapsed .PermCategoryToggle .material-symbols-outlined { transform:rotate(-90deg); }
+        .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
-        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(90px,1fr)); gap:6px; margin-top:8px; }
-        .JobMetricCard { padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.5); }
-        .JobMetricCard .label { font-size:10px; color:rgba(0,0,0,.45); text-transform:uppercase; letter-spacing:.4px; }
-        .JobMetricCard .value { font-size:13px; font-weight:700; margin-top:2px; }
-        #financeTxDescription { background:rgba(255,255,255,.3); border:1px solid rgba(255,255,255,.5); border-radius:8px; padding:10px 12px; font:inherit; resize:vertical; }
+        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:6px; margin-top:8px; }
+        .JobMetricCard { padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); }
+        .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
+        .JobMetricCard .value { margin-top:2px; font-size:14px; font-weight:700; color:rgba(0,0,0,.76); }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
-            .JobBusinessBar .form-group { min-width:0; width:100%; }
-            .JobHeaderActions { width:100%; }
-            .JobHeaderActions button { flex:1; justify-content:center; }
-            .JobTitleItem { display:grid; grid-template-columns:1fr; gap:12px; padding:14px; align-items:stretch; }
-            .JobTitleActions { display:grid !important; grid-template-columns:1fr auto auto auto; gap:8px; align-items:center; }
-            .JobTitleActions > div[style*="text-align"] { text-align:left !important; }
+            .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
+            .JobHeaderActions .GTextBtn { min-height:44px; justify-content:center; }
+            .JobTitleItem { display:grid !important; grid-template-columns:1fr auto; gap:10px; align-items:start !important; padding:14px !important; }
             .JobTitleInfo { min-width:0; }
-            .JobTitleName { font-size:17px; }
-            .JobTitleLevel { line-height:1.35; }
+            .JobTitleName { font-size:17px !important; line-height:1.2; }
+            .JobTitleLevel { line-height:1.35; margin-top:4px; }
+            .JobTitleActions { display:grid !important; grid-template-columns:repeat(2,auto); justify-content:end; gap:8px !important; }
+            .JobTitleActions > div[style*="text-align"] { grid-column:1 / -1; }
             .JobMetricCards { grid-template-columns:1fr 1fr; }
-            .PermCategoryToggle { min-height:44px; }
+            .PermCategoryToggle { min-height:42px; }
         }
     </style>
     <style id="MobileSystemNavStyles">
@@ -3420,7 +3416,8 @@
                 <div class="SidebarCategoryHeader">
                     <span class="material-symbols-outlined">account_balance</span>
                     Finances
-                </div><div class="SidebarTab" data-page="finance" onclick="switchPage('finance')">
+                </div>
+                <div class="SidebarTab" data-page="finance" onclick="switchPage('finance')">
                     <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span>
                     Income / Expenses
                 </div>
@@ -3514,12 +3511,11 @@
 
                     <div class="ResultsSummary" id="resultsSummary" style="display: none;"></div>
 
-                    <div class="SectionHeader" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="SectionHeader" style="display:flex;justify-content:space-between;align-items:center;">
                         <span>Job Titles</span>
-                        
                     </div>
                     <div class="JobBusinessBar">
-                        <div class="form-group">
+                        <div class="form-group" style="flex:1;">
                             <label>Business</label>
                             <select id="jobBusinessSelect" onchange="switchJobBusiness(this.value)"></select>
                         </div>
@@ -3633,7 +3629,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <div>
                         <div class="ContentTitle">Income / Expenses</div>
-                        <div class="ContentDesc">Transactions are assigned to a business and dated automatically.</div>
+                        <div class="ContentDesc">Choose a business, then record income or expenses. The real-world date is added automatically.</div>
                     </div>
                     <button class="GTextBtn primary" onclick="openNewFinanceTransactionModal()">
                         <span class="material-symbols-outlined">add</span> Add
@@ -3817,6 +3813,37 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Job Editor Modal -->
+    <div class="ModalOverlay" id="jobEditorModal" onclick="if(event.target===this)closeModal('jobEditor')">
+        <div class="ModalContent">
+            <div class="ModalTitle"><span>Add Job Title</span><button class="ModalClose" onclick="closeModal('jobEditor')"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="form-group"><label>Job Title</label><input type="text" id="jobTitleInput" placeholder="e.g. Manager"></div>
+            <div class="InputRow">
+                <div class="form-group"><label>Count</label><input type="number" id="jobCountInput" value="1" min="1" max="99"></div>
+                <div class="form-group"><label>Pay Type</label><div class="SalaryModeToggle" id="salaryModeToggle"><button class="active" data-mode="level" onclick="setSalaryMode('level')">Level</button><button data-mode="fixed" onclick="setSalaryMode('fixed')">Fixed</button></div></div>
+            </div>
+            <div class="form-group" id="levelSelectGroup"><label>Level</label><select id="jobLevelInput" onchange="handleLevelSelect(this)"></select></div>
+            <div class="form-group" id="fixedSalaryGroup" style="display:none;"><label>Salary ($)</label><input type="number" id="fixedSalaryInput" placeholder="e.g. 500" min="0" step="5"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="GTextBtn" onclick="closeModal('jobEditor')">Cancel</button><button class="GTextBtn primary" onclick="addJobTitleFromModal()"><span class="material-symbols-outlined">add</span> Add</button></div>
+        </div>
+    </div>
+
+    <!-- Finance Transaction Modal -->
+    <div class="ModalOverlay" id="financeTransactionModal" onclick="if(event.target===this)closeModal('financeTransaction')">
+        <div class="ModalContent">
+            <div class="ModalTitle"><span>Add Transaction</span><button class="ModalClose" onclick="closeModal('financeTransaction')"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="form-group"><label>Business</label><select id="financeBusinessSelect"></select></div>
+            <div class="InputRow">
+                <div class="form-group"><label>Type</label><select id="financeTxType"><option value="income">Income</option><option value="expense">Expense</option></select></div>
+                <div class="form-group"><label>Amount ($)</label><input type="number" id="financeTxAmount" min="0" step="1" placeholder="0"></div>
+            </div>
+            <div class="form-group"><label>Name</label><input type="text" id="financeTxName" placeholder="e.g. Lunch sales"></div>
+            <div class="form-group"><label>In-Game Day</label><select id="financeTxDay"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div>
+            <div class="form-group"><label>Description</label><textarea id="financeTxDescription" rows="3" placeholder="Describe the transaction..."></textarea></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="GTextBtn" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" onclick="saveFinanceTransaction()"><span class="material-symbols-outlined">check</span> Save</button></div>
         </div>
     </div>
 
@@ -4019,37 +4046,6 @@
                     <span class="material-symbols-outlined">check</span> Add
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Job Editor Modal -->
-    <div class="ModalOverlay" id="jobEditorModal" onclick="if(event.target===this)closeModal('jobEditor')">
-        <div class="ModalContent">
-            <div class="ModalTitle"><span>Add Job Title</span><button class="ModalClose" onclick="closeModal('jobEditor')"><span class="material-symbols-outlined">close</span></button></div>
-            <div class="form-group"><label>Job Title</label><input type="text" id="jobTitleInput" placeholder="e.g. Manager"></div>
-            <div class="InputRow">
-                <div class="form-group"><label>Count</label><input type="number" id="jobCountInput" value="1" min="1" max="99"></div>
-                <div class="form-group"><label>Pay Type</label><div class="SalaryModeToggle" id="salaryModeToggle"><button class="active" data-mode="level" onclick="setSalaryMode('level')">Level</button><button data-mode="fixed" onclick="setSalaryMode('fixed')">Fixed</button></div></div>
-            </div>
-            <div class="form-group" id="levelSelectGroup"><label>Level</label><select id="jobLevelInput" onchange="handleLevelSelect(this)"></select></div>
-            <div class="form-group" id="fixedSalaryGroup" style="display:none;"><label>Salary ($)</label><input type="number" id="fixedSalaryInput" placeholder="e.g. 500" min="0" step="5"></div>
-            <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="GTextBtn" onclick="closeModal('jobEditor')">Cancel</button><button class="GTextBtn primary" onclick="addJobTitle()"><span class="material-symbols-outlined">add</span> Add</button></div>
-        </div>
-    </div>
-
-    <!-- Finance Transaction Modal -->
-    <div class="ModalOverlay" id="financeTransactionModal" onclick="if(event.target===this)closeModal('financeTransaction')">
-        <div class="ModalContent">
-            <div class="ModalTitle"><span>Add Transaction</span><button class="ModalClose" onclick="closeModal('financeTransaction')"><span class="material-symbols-outlined">close</span></button></div>
-            <div class="form-group"><label>Business</label><select id="financeBusinessSelect"></select></div>
-            <div class="InputRow">
-                <div class="form-group"><label>Type</label><select id="financeTxType"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-                <div class="form-group"><label>Amount ($)</label><input type="number" id="financeTxAmount" min="0" step="1" placeholder="0"></div>
-            </div>
-            <div class="form-group"><label>Name</label><input type="text" id="financeTxName" placeholder="e.g. Lunch sales"></div>
-            <div class="form-group"><label>In-Game Day</label><select id="financeTxDay"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div>
-            <div class="form-group"><label>Description</label><textarea id="financeTxDescription" rows="3" placeholder="Describe the transaction..."></textarea></div>
-            <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="GTextBtn" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" onclick="saveFinanceTransaction()"><span class="material-symbols-outlined">check</span> Save</button></div>
         </div>
     </div>
 
@@ -4727,7 +4723,7 @@
             loadPermissions();
             renderPermissions();
             loadCustomRanges();
-            loadJobTitles();
+            loadBusinessJobs();
             loadEmployees();
             loadWorkdayRecords();
             loadFinanceRecords();
@@ -4748,7 +4744,7 @@
             recalcWages();
 
             const savedPage = localStorage.getItem('bbActivePage');
-            if (savedPage && savedPage !== 'hours') switchPage(savedPage); else if (savedPage === 'hours') switchPage('finance');
+            if (savedPage && savedPage !== 'hours') switchPage(savedPage);
             else switchPage('permissions');
         }
 
@@ -6002,19 +5998,15 @@
         function renderPermissions() {
             const grid = document.getElementById('permissionGrid');
             grid.innerHTML = '';
-
             roles.forEach(role => {
                 const col = document.createElement('div');
                 col.className = 'RoleColumn';
-
                 const header = document.createElement('div');
                 header.className = 'RoleHeader';
-
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'RoleName';
                 nameSpan.textContent = role;
                 header.appendChild(nameSpan);
-
                 const pillsDiv = document.createElement('div');
                 pillsDiv.className = 'LabelPills';
                 (roleLabels[role] || []).forEach(id => {
@@ -6029,41 +6021,36 @@
                 const addLblBtn = document.createElement('button');
                 addLblBtn.className = 'AddLabelBtn';
                 addLblBtn.title = 'Assign labels';
-                addLblBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">add</span>';
-                addLblBtn.onclick = (e) => toggleLabelDropdown(role, e);
+                addLblBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">add</span>';
+                addLblBtn.onclick = e => toggleLabelDropdown(role,e);
                 pillsDiv.appendChild(addLblBtn);
                 header.appendChild(pillsDiv);
-
                 col.appendChild(header);
 
                 for (const category in permissionTree) {
                     const cat = permissionTree[category];
-
-                    const catLabel = document.createElement('div');
-                    catLabel.className = 'PermCategory';
-                    catLabel.textContent = category;
-                    col.appendChild(catLabel);
-
-                    if (cat._perms) {
-                        cat._perms.forEach(perm => {
-                            col.appendChild(createPermRow(role, `${category}::${perm}`, perm));
-                        });
-                    }
-
+                    const block = document.createElement('div');
+                    block.className = 'PermCategoryBlock';
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'PermCategoryToggle';
+                    toggle.innerHTML = '<span>' + escapeHtml(category) + '</span><span class="material-symbols-outlined">expand_more</span>';
+                    toggle.onclick = () => block.classList.toggle('collapsed');
+                    const body = document.createElement('div');
+                    body.className = 'PermCategoryBody';
+                    if (cat._perms) cat._perms.forEach(perm => body.appendChild(createPermRow(role, category + '::' + perm, perm)));
                     for (const sub in cat) {
                         if (sub === '_perms') continue;
-
                         const subLabel = document.createElement('div');
                         subLabel.className = 'PermSubCategory';
                         subLabel.textContent = sub;
-                        col.appendChild(subLabel);
-
-                        cat[sub].forEach(perm => {
-                            col.appendChild(createPermRow(role, `${category}::${sub}::${perm}`, perm));
-                        });
+                        body.appendChild(subLabel);
+                        cat[sub].forEach(perm => body.appendChild(createPermRow(role, category + '::' + sub + '::' + perm, perm)));
                     }
+                    block.appendChild(toggle);
+                    block.appendChild(body);
+                    col.appendChild(block);
                 }
-
                 grid.appendChild(col);
             });
         }
@@ -7173,6 +7160,7 @@
             saveBusinessLabels();
             renderBusinessDetailGrid();
             openBusinessEdit(businessLabels.length - 1);
+            if (typeof renderJobBusinessSelect === "function") renderJobBusinessSelect();
         }
 
         function removeBusinessLabel(id) {
@@ -7184,6 +7172,9 @@
             saveBusinessLabels();
             renderBusinessDetailGrid();
             renderStaffGrid();
+            if (typeof jobsByBusiness !== "undefined") delete jobsByBusiness[String(id)];
+            if (typeof saveBusinessJobs === "function") saveBusinessJobs();
+            if (typeof renderJobBusinessSelect === "function") renderJobBusinessSelect();
         }
 
         function updateBusinessLabel(id, field, value) {
@@ -9488,73 +9479,26 @@
             setTimeout(() => document.addEventListener('click', closeHandler), 0);
         }
 
-        // ===== BUSINESS MANAGER 1.41 UPDATES =====
-        const collapsedPermissionCategories = new Set();
-
-        function renderPermissions() {
-            const grid = document.getElementById('permissionGrid');
-            grid.innerHTML = '';
-            roles.forEach(role => {
-                const col = document.createElement('div');
-                col.className = 'RoleColumn';
-                const header = document.createElement('div');
-                header.className = 'RoleHeader';
-                header.innerHTML = '<span class="RoleName">' + escapeHtml(role) + '</span>';
-                const pillsDiv = document.createElement('div');
-                pillsDiv.className = 'LabelPills';
-                (roleLabels[role] || []).forEach(id => {
-                    const lbl = permLabels.find(l => l.id === id);
-                    if (!lbl) return;
-                    const pill = document.createElement('span');
-                    pill.className = 'LabelPill'; pill.style.background = lbl.color; pill.textContent = lbl.name; pillsDiv.appendChild(pill);
-                });
-                const addLblBtn = document.createElement('button');
-                addLblBtn.className = 'AddLabelBtn'; addLblBtn.title = 'Assign labels';
-                addLblBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">add</span>';
-                addLblBtn.onclick = e => toggleLabelDropdown(role, e);
-                pillsDiv.appendChild(addLblBtn); header.appendChild(pillsDiv); col.appendChild(header);
-
-                for (const category in permissionTree) {
-                    const cat = permissionTree[category];
-                    const section = document.createElement('div');
-                    section.className = 'PermCategorySection' + (collapsedPermissionCategories.has(role + '::' + category) ? ' collapsed' : '');
-                    const toggle = document.createElement('button');
-                    toggle.className = 'PermCategoryToggle';
-                    toggle.innerHTML = '<span class="PermCategory">' + escapeHtml(category) + '</span><span class="material-symbols-outlined PermCategoryChevron">expand_more</span>';
-                    const body = document.createElement('div');
-                    body.className = 'PermCategoryBody' + (collapsedPermissionCategories.has(role + '::' + category) ? ' collapsed' : '');
-                    toggle.onclick = () => {
-                        const key = role + '::' + category;
-                        if (collapsedPermissionCategories.has(key)) collapsedPermissionCategories.delete(key); else collapsedPermissionCategories.add(key);
-                        section.classList.toggle('collapsed'); body.classList.toggle('collapsed');
-                    };
-                    if (cat._perms) cat._perms.forEach(perm => body.appendChild(createPermRow(role, category + '::' + perm, perm)));
-                    for (const sub in cat) {
-                        if (sub === '_perms') continue;
-                        const subLabel = document.createElement('div'); subLabel.className='PermSubCategory'; subLabel.textContent=sub; body.appendChild(subLabel);
-                        cat[sub].forEach(perm => body.appendChild(createPermRow(role, category + '::' + sub + '::' + perm, perm)));
-                    }
-                    section.appendChild(toggle); section.appendChild(body); col.appendChild(section);
-                }
-                grid.appendChild(col);
-            });
-        }
-
+        // ===== BUSINESS-SCOPED JOBS =====
         let jobsByBusiness = {};
         let activeJobBusinessId = null;
 
-        function loadJobTitles() {
-            try { jobsByBusiness = JSON.parse(localStorage.getItem('bbBusinessJobsByBusiness') || '{}') || {}; } catch(e) { jobsByBusiness = {}; }
+        function loadBusinessJobs() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('bbBusinessJobsByBusiness') || '{}');
+                jobsByBusiness = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+            } catch (error) { jobsByBusiness = {}; }
             const legacy = JSON.parse(localStorage.getItem('bbBusinessJobs') || '[]');
-            const firstBiz = businessLabels[0];
-            if (firstBiz && !Object.keys(jobsByBusiness).length && legacy.length) jobsByBusiness[String(firstBiz.id)] = legacy;
-            activeJobBusinessId = localStorage.getItem('bbActiveJobBusinessId') || (firstBiz ? String(firstBiz.id) : null);
+            let preferred = localStorage.getItem('bbActiveJobBusinessId') || '';
+            if (!preferred && businessLabels.length) preferred = String(businessLabels[0].id);
+            activeJobBusinessId = preferred || null;
+            if (activeJobBusinessId && !jobsByBusiness[activeJobBusinessId] && Array.isArray(legacy) && legacy.length) {
+                jobsByBusiness[activeJobBusinessId] = legacy;
+            }
             jobTitles = activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
-            jobTitles.forEach(j => { if(!j.count)j.count=1;if(!j.hoursPerDay)j.hoursPerDay=24;if(j.disabled===undefined)j.disabled=false; });
-            renderJobBusinessSelect();
         }
 
-        function saveJobTitles() {
+        function saveBusinessJobs() {
             if (activeJobBusinessId) jobsByBusiness[activeJobBusinessId] = jobTitles;
             localStorage.setItem('bbBusinessJobsByBusiness', JSON.stringify(jobsByBusiness));
         }
@@ -9564,22 +9508,26 @@
             if (!sel) return;
             sel.innerHTML = '';
             if (!businessLabels.length) {
-                sel.innerHTML = '<option value="">Add a business first</option>';
-                activeJobBusinessId = null; jobTitles = []; return;
+                const opt=document.createElement('option'); opt.value=''; opt.textContent='Add a business first'; sel.appendChild(opt);
+                activeJobBusinessId=null; jobTitles=[]; renderJobTitles(); return;
             }
             businessLabels.forEach(b => {
-                const o=document.createElement('option'); o.value=String(b.id); o.textContent=b.name; o.selected=String(b.id)===String(activeJobBusinessId); sel.appendChild(o);
+                const opt=document.createElement('option'); opt.value=String(b.id); opt.textContent=b.name;
+                opt.selected=String(b.id)===String(activeJobBusinessId); sel.appendChild(opt);
             });
             if (!activeJobBusinessId || !businessLabels.some(b=>String(b.id)===String(activeJobBusinessId))) {
-                activeJobBusinessId=String(businessLabels[0].id); sel.value=activeJobBusinessId; jobTitles=jobsByBusiness[activeJobBusinessId]||[];
+                activeJobBusinessId=String(businessLabels[0].id);
             }
+            sel.value=activeJobBusinessId;
+            jobTitles=jobsByBusiness[activeJobBusinessId] || [];
+            recalcWages();
         }
 
         function switchJobBusiness(id) {
-            saveJobTitles();
-            activeJobBusinessId = id || null;
+            saveBusinessJobs();
+            activeJobBusinessId=id || null;
             localStorage.setItem('bbActiveJobBusinessId', activeJobBusinessId || '');
-            jobTitles = activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
+            jobTitles=activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
             editingJobIndex=-1;
             recalcWages();
         }
@@ -9588,181 +9536,56 @@
             if (!activeJobBusinessId) { alert('Add and select a business first.'); return; }
             document.getElementById('jobTitleInput').value='';
             document.getElementById('jobCountInput').value='1';
+            renderLevelDropdown();
             openModal('jobEditor');
-            setTimeout(()=>document.getElementById('jobTitleInput').focus(),0);
         }
 
-        const originalAddJobTitle = addJobTitle;
-        addJobTitle = function() {
+        function addJobTitleFromModal() {
             if (!activeJobBusinessId) return;
-            originalAddJobTitle();
-            saveJobTitles();
+            addJobTitle();
+            saveBusinessJobs();
             closeModal('jobEditor');
+        }
+
+        const baseSaveJobTitles = saveJobTitles;
+        saveJobTitles = function() {
+            baseSaveJobTitles();
+            saveBusinessJobs();
         };
 
-        const originalRenderJobTitles = renderJobTitles;
+        const baseRenderJobTitles = renderJobTitles;
         renderJobTitles = function() {
-            originalRenderJobTitles();
-            const empCounts = getJobEmployeeCounts();
+            baseRenderJobTitles();
+            const empCounts = {};
+            employees.forEach(emp => {
+                if (String(emp.businessLabelId) !== String(activeJobBusinessId)) return;
+                if (emp.jobIndex === null || emp.jobIndex === undefined) return;
+                empCounts[emp.jobIndex]=(empCounts[emp.jobIndex]||0)+1;
+            });
             document.querySelectorAll('#jobTitleList .JobTitleItem').forEach((item,i) => {
-                if (!jobTitles[i] || item.classList.contains('editing')) return;
-                const job=jobTitles[i], assigned=empCounts[i]||0;
+                const job=jobTitles[i];
+                if (!job || item.classList.contains('editing')) return;
+                const assigned=empCounts[i]||0;
                 const hpd=job.hoursPerDay||24;
-                const hourly=job.wage!==null&&job.wage!==undefined ? job.wage/24 : 0;
-                const perEmployee=hourly*hpd;
-                const cost=perEmployee*assigned;
+                const hourly=job.wage!==null && job.wage!==undefined ? job.wage/24 : 0;
+                const cost=hourly*hpd*assigned;
                 const budget=parseFloat(document.getElementById('budgetInput').value)||0;
-                const remaining=Math.max(0,budget-cost);
-                const cards=document.createElement('div'); cards.className='JobMetricCards';
-                cards.innerHTML='<div class="JobMetricCard"><div class="label">Job cost</div><div class="value">
-        loadProfiles();
-        loadLabels();
-        loadBusinessLabels();
-        initPermissions();
-        loadPermissions();
-        renderPermissions();
-        loadCustomRanges();
-        loadJobTitles();
-        loadEmployees();
-        loadWorkdayRecords();
-        loadFinanceRecords();
-        loadPartnerships();
-        loadInventoryItems();
-        loadOrders();
-        restoreInventoryView();
-        renderLevelDropdown();
-
-        // Restore config fields
-        const savedBudget = localStorage.getItem('bbBudget');
-        if (savedBudget !== null) document.getElementById('budgetInput').value = savedBudget;
-        const savedHpd = localStorage.getItem('bbHoursPerDay');
-        if (savedHpd !== null) document.getElementById('hoursPerDayInput').value = savedHpd;
-        const savedDays = localStorage.getItem('bbDays');
-        if (savedDays !== null) document.getElementById('daysInput').value = savedDays;
-        const savedMode = localStorage.getItem('bbSalaryMode');
-        if (savedMode) setSalaryMode(savedMode);
-
-        recalcWages();
-        renderJobBusinessSelect();
-        renderFinanceRecordGrid();
-
-        // Restore active page
-        const savedPage = localStorage.getItem('bbActivePage');
-        if (savedPage) switchPage(savedPage);
-
-        // Show Labels button if permissions page is active on load
-        const labelsBtn = document.getElementById('labelsTopBtn');
-        if (labelsBtn && document.getElementById('page-permissions').classList.contains('active')) {
-            labelsBtn.style.display = '';
-        }
-
-        // Start sync if active profile is shared
-        const initProfile = getActiveProfile();
-        if (initProfile && initProfile.type === 'shared' && initProfile.sessionId) {
-            startSync();
-        }
-    </script>
-    <nav class="MobileSystemNav" aria-label="Mobile navigation">
-        <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
-        <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
-    </nav>
-    <script id="MobileSystemNavScript">
-        (() => {
-            const nav = document.querySelector('.MobileSystemNav');
-            if (!nav) return;
-            nav.addEventListener('click', (event) => {
-                const button = event.target.closest('[data-mobile-nav]');
-                if (!button) return;
-                const action = button.dataset.mobileNav;
-                if (action === 'back') {
-                    if (history.length > 1) history.back(); else window.location.href = '../';
-                } else if (action === 'home') window.location.href = '../';
-                else if (action === 'apps') window.location.href = '../#opened-apps';
-            });
-        })();
-    </script>
-</body>
-
-</html>
-+cost.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div><div class="JobMetricCard"><div class="label">Remaining</div><div class="value">
-        loadProfiles();
-        loadLabels();
-        loadBusinessLabels();
-        initPermissions();
-        loadPermissions();
-        renderPermissions();
-        loadCustomRanges();
-        loadJobTitles();
-        loadEmployees();
-        loadWorkdayRecords();
-        loadFinanceRecords();
-        loadPartnerships();
-        loadInventoryItems();
-        loadOrders();
-        restoreInventoryView();
-        renderLevelDropdown();
-
-        // Restore config fields
-        const savedBudget = localStorage.getItem('bbBudget');
-        if (savedBudget !== null) document.getElementById('budgetInput').value = savedBudget;
-        const savedHpd = localStorage.getItem('bbHoursPerDay');
-        if (savedHpd !== null) document.getElementById('hoursPerDayInput').value = savedHpd;
-        const savedDays = localStorage.getItem('bbDays');
-        if (savedDays !== null) document.getElementById('daysInput').value = savedDays;
-        const savedMode = localStorage.getItem('bbSalaryMode');
-        if (savedMode) setSalaryMode(savedMode);
-
-        recalcWages();
-
-        // Restore active page
-        const savedPage = localStorage.getItem('bbActivePage');
-        if (savedPage) switchPage(savedPage);
-
-        // Show Labels button if permissions page is active on load
-        const labelsBtn = document.getElementById('labelsTopBtn');
-        if (labelsBtn && document.getElementById('page-permissions').classList.contains('active')) {
-            labelsBtn.style.display = '';
-        }
-
-        // Start sync if active profile is shared
-        const initProfile = getActiveProfile();
-        if (initProfile && initProfile.type === 'shared' && initProfile.sessionId) {
-            startSync();
-        }
-    </script>
-    <nav class="MobileSystemNav" aria-label="Mobile navigation">
-        <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
-        <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
-    </nav>
-    <script id="MobileSystemNavScript">
-        (() => {
-            const nav = document.querySelector('.MobileSystemNav');
-            if (!nav) return;
-            nav.addEventListener('click', (event) => {
-                const button = event.target.closest('[data-mobile-nav]');
-                if (!button) return;
-                const action = button.dataset.mobileNav;
-                if (action === 'back') {
-                    if (history.length > 1) history.back(); else window.location.href = '../';
-                } else if (action === 'home') window.location.href = '../';
-                else if (action === 'apps') window.location.href = '../#opened-apps';
-            });
-        })();
-    </script>
-</body>
-
-</html>
-+remaining.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div>';
-                item.querySelector('.JobTitleInfo')?.appendChild(cards);
+                const remaining=budget-cost;
+                const cards=document.createElement('div');
+                cards.className='JobMetricCards';
+                cards.innerHTML='<div class="JobMetricCard"><div class="label">Job cost</div><div class="value">$'+cost.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div><div class="JobMetricCard"><div class="label">Remaining</div><div class="value">$'+remaining.toLocaleString(undefined,{maximumFractionDigits:2})+'</div></div>';
+                const info=item.querySelector('.JobTitleInfo');
+                if (info) info.appendChild(cards);
             });
         };
 
         function populateBusinessSelect(selectId) {
-            const sel=document.getElementById(selectId); if(!sel)return;
+            const sel=document.getElementById(selectId);
+            if (!sel) return;
             sel.innerHTML='';
-            businessLabels.forEach(b=>{const o=document.createElement('option');o.value=String(b.id);o.textContent=b.name;sel.appendChild(o);});
+            businessLabels.forEach(b => {
+                const opt=document.createElement('option'); opt.value=String(b.id); opt.textContent=b.name; sel.appendChild(opt);
+            });
         }
 
         function openNewFinanceTransactionModal() {
@@ -9785,102 +9608,30 @@
             if (!businessId || !name || amount<=0) return;
             const now=new Date();
             const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-            financeRecords.push({id:Date.now(),businessId,name,date,inGameDay,description,entries:[{id:Date.now()+1,type,description,amount,category:'Other'}]});
-            saveFinanceRecords(); closeModal('financeTransaction'); renderFinanceRecordGrid();
+            financeRecords.push({id:Date.now(),businessId:businessId,name:name,date:date,inGameDay:inGameDay,description:description,entries:[{id:Date.now()+1,type:type,description:description,amount:amount,category:'Other'}]});
+            saveFinanceRecords();
+            closeModal('financeTransaction');
+            renderFinanceRecordGrid();
         }
 
-        function renderFinanceRecordGrid() {
-            const grid=document.getElementById('financeRecordGrid'); if(!grid)return; grid.innerHTML='';
+        function renderSimpleFinanceGrid() {
+            const grid=document.getElementById('financeRecordGrid');
+            if (!grid) return;
+            grid.innerHTML='';
             const sorted=[...financeRecords].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-            sorted.forEach(record=>{
+            sorted.forEach(record => {
                 const biz=businessLabels.find(b=>Number(b.id)===Number(record.businessId));
                 const income=(record.entries||[]).filter(e=>e.type==='income').reduce((s,e)=>s+(e.amount||0),0);
                 const expense=(record.entries||[]).filter(e=>e.type==='expense').reduce((s,e)=>s+(e.amount||0),0);
-                const card=document.createElement('div'); card.className='RecordCard';
-                card.innerHTML='<div class="RecordCardActions"><button class="StaffCardBtn danger" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,.7);">close</span></button></div>'+
-                    '<div class="RecordCardTitle">'+escapeHtml(record.name||'Transaction')+'</div>'+
-                    '<div class="RecordCardMeta">'+escapeHtml(biz?biz.name:'Unassigned business')+' · '+escapeHtml(record.inGameDay||'')+' · '+escapeHtml(record.date||'')+'</div>'+
-                    (record.description?'<div style="font-size:12px;color:rgba(0,0,0,.55);margin:6px 0;">'+escapeHtml(record.description)+'</div>':'')+
-                    '<div style="font-size:16px;font-weight:700;color:'+(income>=expense?'rgba(22,163,74,.9)':'rgba(220,38,38,.9)')+';">'+(income>=expense?'+':'-')+'
-        loadProfiles();
-        loadLabels();
-        loadBusinessLabels();
-        initPermissions();
-        loadPermissions();
-        renderPermissions();
-        loadCustomRanges();
-        loadJobTitles();
-        loadEmployees();
-        loadWorkdayRecords();
-        loadFinanceRecords();
-        loadPartnerships();
-        loadInventoryItems();
-        loadOrders();
-        restoreInventoryView();
-        renderLevelDropdown();
-
-        // Restore config fields
-        const savedBudget = localStorage.getItem('bbBudget');
-        if (savedBudget !== null) document.getElementById('budgetInput').value = savedBudget;
-        const savedHpd = localStorage.getItem('bbHoursPerDay');
-        if (savedHpd !== null) document.getElementById('hoursPerDayInput').value = savedHpd;
-        const savedDays = localStorage.getItem('bbDays');
-        if (savedDays !== null) document.getElementById('daysInput').value = savedDays;
-        const savedMode = localStorage.getItem('bbSalaryMode');
-        if (savedMode) setSalaryMode(savedMode);
-
-        recalcWages();
-
-        // Restore active page
-        const savedPage = localStorage.getItem('bbActivePage');
-        if (savedPage) switchPage(savedPage);
-
-        // Show Labels button if permissions page is active on load
-        const labelsBtn = document.getElementById('labelsTopBtn');
-        if (labelsBtn && document.getElementById('page-permissions').classList.contains('active')) {
-            labelsBtn.style.display = '';
-        }
-
-        // Start sync if active profile is shared
-        const initProfile = getActiveProfile();
-        if (initProfile && initProfile.type === 'shared' && initProfile.sessionId) {
-            startSync();
-        }
-    </script>
-    <nav class="MobileSystemNav" aria-label="Mobile navigation">
-        <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
-        <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
-    </nav>
-    <script id="MobileSystemNavScript">
-        (() => {
-            const nav = document.querySelector('.MobileSystemNav');
-            if (!nav) return;
-            nav.addEventListener('click', (event) => {
-                const button = event.target.closest('[data-mobile-nav]');
-                if (!button) return;
-                const action = button.dataset.mobileNav;
-                if (action === 'back') {
-                    if (history.length > 1) history.back(); else window.location.href = '../';
-                } else if (action === 'home') window.location.href = '../';
-                else if (action === 'apps') window.location.href = '../#opened-apps';
-            });
-        })();
-    </script>
-</body>
-
-</html>
-+Math.abs(income-expense).toLocaleString()+'</div>';
-                card.querySelector('button').onclick=()=>removeFinanceRecord(record.id);
+                const net=income-expense;
+                const card=document.createElement('div');
+                card.className='RecordCard';
+                card.innerHTML='<div class="RecordCardActions"><button class="StaffCardBtn danger" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,.7);">close</span></button></div><div class="RecordCardTitle">'+escapeHtml(record.name||'Transaction')+'</div><div class="RecordCardMeta">'+escapeHtml(biz?biz.name:'Unassigned business')+' · '+escapeHtml(record.inGameDay||'')+' · '+escapeHtml(record.date||'')+'</div>'+(record.description?'<div style="font-size:12px;color:rgba(0,0,0,.55);margin:6px 0;">'+escapeHtml(record.description)+'</div>':'')+'<div style="font-size:16px;font-weight:700;color:'+(net>=0?'rgba(22,163,74,.9)':'rgba(220,38,38,.9)')+';">'+(net>=0?'+':'-')+'$'+Math.abs(net).toLocaleString()+'</div>';
+                card.querySelector('button').onclick=()=>{ removeFinanceRecord(record.id); renderSimpleFinanceGrid(); };
                 grid.appendChild(card);
             });
             if (!sorted.length) grid.innerHTML='<div class="EmptyState"><span class="material-symbols-outlined">receipt_long</span><div>No transactions yet.</div></div>';
         }
-
-        const originalAddBusinessLabel = addBusinessLabel;
-        addBusinessLabel = function(){ originalAddBusinessLabel(); renderJobBusinessSelect(); };
-        const originalRemoveBusinessLabel = removeBusinessLabel;
-        removeBusinessLabel = function(id){ originalRemoveBusinessLabel(id); delete jobsByBusiness[String(id)]; saveJobTitles(); renderJobBusinessSelect(); };
 
         // ===== INIT =====
         loadProfiles();
@@ -9911,6 +9662,8 @@
         if (savedMode) setSalaryMode(savedMode);
 
         recalcWages();
+        renderJobBusinessSelect();
+        renderSimpleFinanceGrid();
 
         // Restore active page
         const savedPage = localStorage.getItem('bbActivePage');
