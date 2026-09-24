@@ -3154,6 +3154,29 @@
             .MobileSystemNav button { pointer-events:auto !important; touch-action:manipulation; -webkit-tap-highlight-color:transparent; position:relative; z-index:1; }
             .MobileSystemNav button svg, .MobileSystemNav button svg * { pointer-events:none; }
         }
+
+        .JobAssignedAvatars { display:inline-flex; align-items:center; margin-left:5px; vertical-align:middle; }
+        .JobAssignedAvatars img, .JobAssignedAvatarPlaceholder { width:20px; height:20px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.9); background:rgba(255,255,255,.8); margin-left:-6px; box-sizing:border-box; display:inline-grid; place-items:center; overflow:hidden; }
+        .JobAssignedAvatars img:first-child, .JobAssignedAvatarPlaceholder:first-child { margin-left:0; }
+        .JobAssignedAvatarPlaceholder .material-symbols-outlined { font-size:13px; color:rgba(0,0,0,.45); }
+        .JobContextMenuButton, .JobContextMenu { display:none; }
+        @media (max-width:768px) {
+            .JobTitleItem { position:relative; overflow:visible !important; display:block !important; padding:13px 46px 13px 13px !important; }
+            .JobTitleInfo { width:100% !important; }
+            .JobMetricCards { display:none !important; }
+            .JobTitleActions { position:absolute !important; top:8px; right:8px; width:auto !important; display:block !important; }
+            .JobTitleActions > :not(.JobContextMenuButton):not(.JobContextMenu) { display:none !important; }
+            .JobContextMenuButton { display:grid; place-items:center; width:34px; height:34px; border:0; border-radius:9px; background:rgba(255,255,255,.38); color:rgba(0,0,0,.65); padding:0; cursor:pointer; touch-action:manipulation; }
+            .JobContextMenuButton .material-symbols-outlined { font-size:21px; }
+            .JobContextMenu { position:absolute; display:none; top:39px; right:0; min-width:148px; padding:5px; border-radius:11px; background:rgba(245,245,245,.96); border:1px solid rgba(255,255,255,.75); box-shadow:0 10px 30px rgba(0,0,0,.16); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); z-index:50; }
+            .JobContextMenu.open { display:flex; flex-direction:column; }
+            .JobContextMenu button { border:0; background:transparent; border-radius:7px; padding:9px 10px; display:flex; align-items:center; gap:9px; text-align:left; font:inherit; font-size:12px; color:rgba(0,0,0,.75); }
+            .JobContextMenu button:active { background:rgba(0,0,0,.06); }
+            .JobContextMenu button .material-symbols-outlined { font-size:17px; }
+            .JobContextMenu button.danger { color:rgba(220,38,38,.85); }
+            .JobAvailableSlots { display:inline-flex !important; align-items:center; width:max-content; max-width:100%; margin-top:7px !important; padding:4px 7px !important; overflow:visible !important; }
+            .JobAssignedAvatars img, .JobAssignedAvatarPlaceholder { width:22px; height:22px; }
+        }
 </style>
     <style id="BusinessManagerMobile">
         @media (max-width: 768px) {
@@ -6406,17 +6429,25 @@
                     wageHTML = `<div style="text-align: right;"><span class="JobTitleWage">$${dailyWage.toLocaleString()}</span>${hourlyInfo}${totalCost}</div>`;
                 }
 
-                let statusHTML = '';
-                if (job.payStatus) {
-                    statusHTML = `<span class="PayStatusLabel ${job.payStatus}">${job.payStatus}</span>`;
-                }
+                const statusHTML = '';
 
                 const countBadge = count > 1 ? `<span class="JobCountBadge">${count}×</span>` : '';
 
                 const assigned = empCounts[i] || 0;
                 const available = count - assigned;
                 const slotsClass = available <= 0 ? 'full' : assigned > 0 ? 'partial' : 'empty';
-                const slotsHTML = `<span class="JobAvailableSlots ${slotsClass}">${assigned}/${count} filled</span>`;
+                const assignedStaff = employees.filter(emp =>
+                    String(emp.businessLabelId) === String(activeJobBusinessId) &&
+                    Number(emp.jobIndex) === i
+                );
+                const avatarStackHTML = assignedStaff.length ? `
+                    <span class="JobAssignedAvatars" aria-label="${assignedStaff.length} assigned staff">
+                        ${assignedStaff.map(emp => emp.avatarUrl
+                            ? `<img src="${escapeHtml(emp.avatarUrl)}" alt="" onerror="this.style.display='none'">`
+                            : '<span class="JobAssignedAvatarPlaceholder"><span class="material-symbols-outlined">person</span></span>'
+                        ).join('')}
+                    </span>` : '';
+                const slotsHTML = `<span class="JobAvailableSlots ${slotsClass}">${assigned}/${count} filled ${avatarStackHTML}</span>`;
 
                 item.innerHTML = `
                     <div class="JobTitleInfo">
@@ -6442,9 +6473,50 @@
                     </div>
                 `;
 
+                const actions = item.querySelector('.JobTitleActions');
+                if (actions) {
+                    const menuButton = document.createElement('button');
+                    menuButton.type = 'button';
+                    menuButton.className = 'JobContextMenuButton';
+                    menuButton.setAttribute('aria-label', 'Job actions');
+                    menuButton.setAttribute('aria-expanded', 'false');
+                    menuButton.innerHTML = '<span class="material-symbols-outlined">more_vert</span>';
+                    const menu = document.createElement('div');
+                    menu.className = 'JobContextMenu';
+                    menu.innerHTML =
+                        '<button type="button" data-job-action="toggle"><span class="material-symbols-outlined">' + (job.disabled ? 'toggle_off' : 'toggle_on') + '</span>' + (job.disabled ? 'Enable' : 'Disable') + '</button>' +
+                        '<button type="button" data-job-action="edit"><span class="material-symbols-outlined">edit</span>Edit</button>' +
+                        '<button type="button" data-job-action="duplicate"><span class="material-symbols-outlined">content_copy</span>Duplicate</button>' +
+                        '<button type="button" class="danger" data-job-action="remove"><span class="material-symbols-outlined">delete</span>Remove</button>';
+                    menuButton.addEventListener('click', event => {
+                        event.stopPropagation();
+                        document.querySelectorAll('.JobContextMenu.open').forEach(openMenu => {
+                            if (openMenu !== menu) openMenu.classList.remove('open');
+                        });
+                        const open = menu.classList.toggle('open');
+                        menuButton.setAttribute('aria-expanded', String(open));
+                    });
+                    menu.addEventListener('click', event => {
+                        const button = event.target.closest('[data-job-action]');
+                        if (!button) return;
+                        event.stopPropagation();
+                        menu.classList.remove('open');
+                        if (button.dataset.jobAction === 'toggle') toggleJobDisabled(i);
+                        else if (button.dataset.jobAction === 'edit') startEditJob(i);
+                        else if (button.dataset.jobAction === 'duplicate') duplicateJob(i);
+                        else if (button.dataset.jobAction === 'remove') removeJobTitle(i);
+                    });
+                    actions.prepend(menuButton);
+                    actions.appendChild(menu);
+                }
                 list.appendChild(item);
             });
         }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.JobContextMenu.open').forEach(menu => menu.classList.remove('open'));
+            document.querySelectorAll('.JobContextMenuButton[aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+        });
 
         function updateBudgetBar(dailyTotal, budget, days) {
             const container = document.getElementById('budgetBarContainer');
