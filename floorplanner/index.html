@@ -40,6 +40,11 @@
         }
     </style>
     <meta name="theme-color" content="#D9D9D9">
+    <style id="LegacyHomeButtonMobileStyles">
+        @media (max-width: 768px) {
+            .LegacyHomeButton { display: none !important; }
+        }
+    </style>
 </head>
 
 <body>
@@ -274,7 +279,7 @@
                 <button class="GTextBtn primary" onclick="exportAsPNG()" style="padding: 6px 12px;">
                     <span class="material-symbols-outlined">image</span> Export PNG
                 </button>
-                <button class="GTextBtn" onclick="window.location.href='../'" style="padding: 6px 12px;">
+                <button class="LegacyHomeButton GTextBtn"  onclick="window.location.href='../'" style="padding: 6px 12px;">
                     <span class="material-symbols-outlined">home</span> Home
                 </button>
             </div>
