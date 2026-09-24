@@ -3418,6 +3418,47 @@
             }
         }
     </style>
+    <style id="JobCardMobileTweaks">
+        .JobMobileSalary { display:none; }
+        @media (max-width:768px) {
+            #jobTitleList { overflow:visible !important; }
+            #jobTitleList .JobTitleItem { position:relative !important; overflow:visible !important; z-index:1; }
+            #jobTitleList .JobTitleItem:has(.JobContextMenu.open) { z-index:100000 !important; }
+            #jobTitleList .JobTitleActions {
+                position:absolute !important;
+                top:0 !important;
+                right:0 !important;
+                z-index:100001 !important;
+            }
+            #jobTitleList .JobContextMenuButton {
+                position:absolute !important;
+                top:0 !important;
+                right:0 !important;
+                border-radius:0 11px 0 9px !important;
+                z-index:100002 !important;
+            }
+            #jobTitleList .JobContextMenu {
+                top:36px !important;
+                right:0 !important;
+                z-index:2147483000 !important;
+            }
+            #jobTitleList .JobContextMenu.open { display:flex !important; }
+            .JobMobileSalary {
+                display:flex;
+                align-items:baseline;
+                gap:7px;
+                margin-top:7px;
+                font-size:11px;
+                color:rgba(0,0,0,.48);
+            }
+            .JobMobileSalary strong {
+                font-size:13px;
+                font-weight:600;
+                color:rgba(99,102,241,.9);
+            }
+            .JobMobileSalary span { font-size:10px; }
+        }
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -6454,6 +6495,7 @@
                         <div class="JobTitleName">${countBadge} ${escapeHtml(job.title)}</div>
                         <div class="JobTitleLevel">${subtitle}</div>
                         ${slotsHTML}
+                        ${dailyWage !== null ? `<div class="JobMobileSalary"><strong>${hourlyRate.toLocaleString()}/hr</strong><span>${dailyWage.toLocaleString()} after ${hpd}h</span></div>` : ''}
                     </div>
                     <div class="JobTitleActions">
                         ${statusHTML}
