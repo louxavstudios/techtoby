@@ -3304,9 +3304,9 @@
         .JobMetricCard .label { font-size:10px; line-height:1; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
         .JobMetricCard .value { margin-top:5px; font-size:16px; line-height:1.05; font-weight:700; color:rgba(0,0,0,.76); white-space:nowrap; }
         .JobMetricCard .sub { margin-top:5px; font-size:9px; line-height:1.1; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:800px; cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; }
+        .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:800px; cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
         .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .38s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
-        .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); box-sizing:border-box; }
+        .SummaryFlipFace { position:absolute; inset:0; padding:12px; pointer-events:none; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); box-sizing:border-box; }
         .SummaryFlipBack { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
@@ -6599,56 +6599,79 @@
             renderJobTitles();
             updateBudgetBar(dailyTotal, budget, days);
 
-            // Update inline summary
+            // Update inline summary. Assigned-staff values are the default;
+            // Daily Cost, Remaining, and Employees flip to planned/all-position values.
             const summaryDiv = document.getElementById('resultsSummary');
             summaryDiv.style.display = '';
-            const remaining = budget - totalCost;
-            const avgPerEmployee = totalEmployees > 0 ? Math.round(dailyTotal / totalEmployees) : 0;
+
+            const assignedCounts = {};
+            employees.forEach(emp => {
+                if (String(emp.businessLabelId) !== String(activeJobBusinessId)) return;
+                if (emp.jobIndex === null || emp.jobIndex === undefined) return;
+                assignedCounts[emp.jobIndex] = (assignedCounts[emp.jobIndex] || 0) + 1;
+            });
+
+            let assignedDailyTotal = 0;
+            let assignedEmployees = 0;
+            jobTitles.forEach((job, index) => {
+                if (job.disabled) return;
+                const assigned = assignedCounts[index] || 0;
+                const hpd = job.hoursPerDay || 24;
+                const wage = Number(job.wage) || 0;
+                assignedDailyTotal += (wage / 24) * hpd * assigned;
+                assignedEmployees += assigned;
+            });
+            assignedDailyTotal = Math.round(assignedDailyTotal * 100) / 100;
+
+            const assignedTotalCost = Math.round(assignedDailyTotal * days * 100) / 100;
+            const assignedRemaining = Math.round((budget - assignedTotalCost) * 100) / 100;
+            const plannedRemaining = Math.round((budget - totalCost) * 100) / 100;
+            const money = value => '$' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+            const makeSummaryFlipCard = (id, label, assignedValue, assignedSub, plannedValue, plannedSub, assignedColor, plannedColor) => `
+                <div class="SummaryCard SummaryFlipCard" id="${id}" role="button" tabindex="0" aria-label="${label}: showing assigned staff. Tap to show all planned employees.">
+                    <div class="SummaryFlipInner">
+                        <div class="SummaryFlipFace">
+                            <div class="label">${label}</div>
+                            <div class="value" style="${assignedColor ? 'color:' + assignedColor : ''}">${assignedValue}</div>
+                            <div class="sub">${assignedSub}</div>
+                        </div>
+                        <div class="SummaryFlipFace SummaryFlipBack">
+                            <div class="label">${label}</div>
+                            <div class="value" style="${plannedColor ? 'color:' + plannedColor : ''}">${plannedValue}</div>
+                            <div class="sub">${plannedSub}</div>
+                        </div>
+                    </div>
+                </div>`;
 
             summaryDiv.innerHTML = `
                 <div class="SummaryCard">
                     <div class="label">Budget</div>
-                    <div class="value">$${budget.toLocaleString()}</div>
-                    <div class="sub">${days > 1 ? '$' + Math.round(dailyBudget).toLocaleString() + '/day' : 'total'}</div>
+                    <div class="value">${money(budget)}</div>
+                    <div class="sub">${days > 1 ? money(Math.round(dailyBudget)) + '/day' : 'total'}</div>
                 </div>
-                <div class="SummaryCard">
-                    <div class="label">Daily Cost</div>
-                    <div class="value">$${dailyTotal.toLocaleString()}</div>
-                    <div class="sub">${days} day${days !== 1 ? 's' : ''} = $${totalCost.toLocaleString()}</div>
-                </div>
-                <div class="SummaryCard">
-                    <div class="label">Remaining</div>
-                    <div class="value" style="color: ${remaining >= 0 ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)'}">$${remaining.toLocaleString()}</div>
-                </div>
-                <div class="SummaryCard SummaryFlipCard" id="employeesSummaryCard" role="button" tabindex="0" aria-label="Switch employees between assigned staff and planned positions">
-                    <div class="SummaryFlipInner">
-                        <div class="SummaryFlipFace">
-                            <div class="label">Assigned Staff</div>
-                            <div class="value">${employees.filter(emp => {
-                                const selectedBusiness = typeof activeJobBusinessId !== 'undefined' ? activeJobBusinessId : null;
-                                return String(emp.businessLabelId) === String(selectedBusiness) && emp.jobIndex !== null && emp.jobIndex !== undefined;
-                            }).length}</div>
-                            <div class="sub">currently assigned to jobs</div>
-                        </div>
-                        <div class="SummaryFlipFace SummaryFlipBack">
-                            <div class="label">Employees</div>
-                            <div class="value">${totalEmployees}</div>
-                            <div class="sub">planned positions · ${jobTitles.length} title${jobTitles.length !== 1 ? 's' : ''}</div>
-                        </div>
-                    </div>
-                </div>
+                ${makeSummaryFlipCard('dailyCostSummaryCard', 'Daily Cost', money(assignedDailyTotal), assignedEmployees + ' assigned staff', money(dailyTotal), days + ' day' + (days !== 1 ? 's' : '') + ' = ' + money(totalCost), '', '')}
+                ${makeSummaryFlipCard('remainingSummaryCard', 'Remaining', money(assignedRemaining), 'after assigned staff', money(plannedRemaining), 'after all planned employees', assignedRemaining >= 0 ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)', plannedRemaining >= 0 ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)')}
+                ${makeSummaryFlipCard('employeesSummaryCard', 'Employees', assignedEmployees, 'currently assigned to jobs', totalEmployees, 'planned positions · ' + jobTitles.length + ' title' + (jobTitles.length !== 1 ? 's' : ''), '', '')}
             `;
-            const employeesCard = document.getElementById('employeesSummaryCard');
-            if (employeesCard) {
-                const flipEmployees = () => employeesCard.classList.toggle('flipped');
-                employeesCard.addEventListener('click', flipEmployees);
-                employeesCard.addEventListener('keydown', event => {
+
+            ['dailyCostSummaryCard', 'remainingSummaryCard', 'employeesSummaryCard'].forEach(id => {
+                const card = document.getElementById(id);
+                if (!card) return;
+                const flipCard = () => {
+                    const planned = !card.classList.contains('flipped');
+                    card.classList.toggle('flipped', planned);
+                    const label = card.querySelector('.label')?.textContent || 'Summary';
+                    card.setAttribute('aria-label', label + ': showing ' + (planned ? 'all planned employees' : 'assigned staff') + '. Tap to switch.');
+                };
+                card.addEventListener('click', flipCard);
+                card.addEventListener('keydown', event => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        flipEmployees();
+                        flipCard();
                     }
                 });
-            }
+            });
         }
 
         function escapeHtml(text) {
