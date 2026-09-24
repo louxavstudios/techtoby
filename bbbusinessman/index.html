@@ -6603,7 +6603,10 @@
                         </div>
                         <div class="SummaryFlipFace SummaryFlipBack">
                             <div class="label">Assigned Staff</div>
-                            <div class="value">${employees.filter(emp => String(emp.businessLabelId) === String(activeJobBusinessId) && emp.jobIndex !== null && emp.jobIndex !== undefined).length}</div>
+                            <div class="value">${employees.filter(emp => {
+                                const selectedBusiness = typeof activeJobBusinessId !== 'undefined' ? activeJobBusinessId : null;
+                                return String(emp.businessLabelId) === String(selectedBusiness) && emp.jobIndex !== null && emp.jobIndex !== undefined;
+                            }).length}</div>
                             <div class="sub">currently assigned to jobs</div>
                         </div>
                     </div>
