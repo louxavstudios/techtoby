@@ -3295,38 +3295,35 @@
         .PermCategoryBlock.collapsed .PermCategoryToggle .material-symbols-outlined { transform:rotate(-90deg); }
         .JobBusinessBar { display:flex; align-items:flex-end; gap:10px; margin-bottom:12px; }
         .JobHeaderActions { display:flex; gap:8px; }
-        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; width:100%; }
-        .JobMetricCard { position:relative; height:82px; min-width:0; padding:0; border-radius:12px; background:rgba(255,255,255,.38); border:1px solid rgba(255,255,255,.58); cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; transform:rotateY(0deg); transition:transform .18s ease; }
-        .JobMetricCard.flipping { transform:rotateY(90deg); }
-        .JobMetricFace { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:10px 12px; box-sizing:border-box; }
-        .JobMetricFace[hidden] { display:none !important; }
-        .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
-        .JobMetricCard .value { margin-top:2px; font-size:16px; line-height:1.15; font-weight:700; color:rgba(0,0,0,.76); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .JobMetricCard .sub { margin-top:4px; font-size:10px; line-height:1.15; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-        .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
-        .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); }
-        .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
-        .SummaryFlipBack { transform:rotateY(180deg); }
+        .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:8px; margin-top:10px; }
+        .JobMetricCard { position:relative; height:72px; min-height:72px; padding:0; border-radius:10px; background:rgba(255,255,255,.34); border:1px solid rgba(255,255,255,.55); perspective:800px; cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; }
+        .JobMetricCardInner { position:relative; width:100%; height:100%; transition:transform .38s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
+        .JobMetricFace { position:absolute; inset:0; padding:9px 10px; display:flex; flex-direction:column; justify-content:center; border-radius:10px; background:rgba(255,255,255,.32); backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); box-sizing:border-box; }
+        .JobMetricBack { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); background:rgba(255,255,255,.5); }
+        .JobMetricCard .label { font-size:10px; line-height:1; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
+        .JobMetricCard .value { margin-top:5px; font-size:16px; line-height:1.05; font-weight:700; color:rgba(0,0,0,.76); white-space:nowrap; }
+        .JobMetricCard .sub { margin-top:5px; font-size:9px; line-height:1.1; color:rgba(0,0,0,.48); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:800px; cursor:pointer; overflow:hidden; -webkit-tap-highlight-color:transparent; }
+        .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .38s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg); -webkit-transform:rotateY(0deg); box-sizing:border-box; }
+        .SummaryFlipBack { transform:rotateY(180deg); -webkit-transform:rotateY(180deg); }
         @media (max-width:768px) {
             .JobBusinessBar { align-items:stretch; flex-direction:column; }
             .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
             .JobHeaderActions .GTextBtn { min-height:44px; justify-content:center; }
-            .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) 112px; gap:12px; align-items:start !important; padding:14px !important; min-height:0; overflow:hidden; }
-            .JobTitleInfo { min-width:0; width:100%; display:grid; grid-template-columns:1fr; }
-            .JobTitleInfo > .JobMetricCards { grid-column:1 / -1; }
-            .JobTitleActions { align-self:start; }
+            .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) auto; gap:10px 12px; align-items:start !important; padding:14px !important; min-height:0; overflow:visible; }
+            .JobTitleInfo { min-width:0; width:auto; display:contents !important; }
+            .JobTitleInfo > div:not(.JobMetricCards) { grid-column:1; }
+            .JobTitleInfo > .JobMetricCards { grid-column:1 / -1; grid-row:auto; }
             .JobTitleName { font-size:17px !important; line-height:1.2; }
             .JobTitleLevel { line-height:1.35; margin-top:4px; }
-            .JobTitleActions { width:112px; display:grid !important; grid-template-columns:repeat(2,36px); justify-content:end; align-content:start; gap:8px !important; }
+            .JobTitleActions { grid-column:2; grid-row:1 / span 4; width:112px; display:grid !important; grid-template-columns:repeat(2,36px); justify-content:end; align-content:start; gap:8px !important; }
             .JobTitleActions > div[style*="text-align"] { grid-column:1 / -1; min-width:0 !important; width:112px; }
             .JobTitleWage { min-width:0 !important; width:112px; font-size:16px !important; }
             .JobTotalCost { white-space:normal; line-height:1.25; }
-            .JobMetricCards { grid-template-columns:minmax(0,1fr) minmax(0,1fr); width:100%; gap:6px; margin-top:8px; }
-            .JobMetricCard, .JobMetricCardInner { height:74px; min-height:74px; }
-            .JobMetricFace { padding:9px 10px; overflow:hidden; display:flex; flex-direction:column; justify-content:center; }
-            .JobMetricCard .value { font-size:14px; line-height:1.15; white-space:nowrap; }
-            .JobMetricCard .sub { margin-top:4px; font-size:9px; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .JobMetricCards { grid-template-columns:minmax(0,1fr) minmax(0,1fr); width:100%; gap:8px; margin-top:8px; }
+            .JobMetricCard, .JobMetricCardInner { height:72px; min-height:72px; }
             .FilledBar { max-width:100%; }
             .PermCategoryToggle { min-height:42px; }
         }
@@ -6604,20 +6601,20 @@
                     <div class="label">Remaining</div>
                     <div class="value" style="color: ${remaining >= 0 ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)'}">$${remaining.toLocaleString()}</div>
                 </div>
-                <div class="SummaryCard SummaryFlipCard flipped" id="employeesSummaryCard" role="button" tabindex="0" aria-label="Switch employees between assigned staff and planned positions">
+                <div class="SummaryCard SummaryFlipCard" id="employeesSummaryCard" role="button" tabindex="0" aria-label="Switch employees between assigned staff and planned positions">
                     <div class="SummaryFlipInner">
                         <div class="SummaryFlipFace">
-                            <div class="label">Employees</div>
-                            <div class="value">${totalEmployees}</div>
-                            <div class="sub">planned positions · ${jobTitles.length} title${jobTitles.length !== 1 ? 's' : ''}</div>
-                        </div>
-                        <div class="SummaryFlipFace SummaryFlipBack">
                             <div class="label">Assigned Staff</div>
                             <div class="value">${employees.filter(emp => {
                                 const selectedBusiness = typeof activeJobBusinessId !== 'undefined' ? activeJobBusinessId : null;
                                 return String(emp.businessLabelId) === String(selectedBusiness) && emp.jobIndex !== null && emp.jobIndex !== undefined;
                             }).length}</div>
                             <div class="sub">currently assigned to jobs</div>
+                        </div>
+                        <div class="SummaryFlipFace SummaryFlipBack">
+                            <div class="label">Employees</div>
+                            <div class="value">${totalEmployees}</div>
+                            <div class="sub">planned positions · ${jobTitles.length} title${jobTitles.length !== 1 ? 's' : ''}</div>
                         </div>
                     </div>
                 </div>
