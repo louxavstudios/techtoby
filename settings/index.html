@@ -4,7 +4,7 @@
 <head>
     <script src="../account.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Settings — Techtoby Corp</title>
 
     <link rel="shortcut icon" href="https://static.wikia.nocookie.net/welcome-to-bloxburg/images/a/a1/Briefcase.png/revision/latest?cb=20240104022135" type="image/x-icon">
@@ -887,6 +887,15 @@
                 left: 2px;
                 top: 2px;
                 bottom: auto;
+            }
+        }
+    </style>
+    <style id="MobileViewportLockStyles">
+        @media (max-width: 768px) {
+            html, body {
+                overscroll-behavior: none;
+                overflow: hidden;
+                touch-action: pan-x pan-y;
             }
         }
     </style>
