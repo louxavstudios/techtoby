@@ -3313,7 +3313,9 @@
             .JobHeaderActions { display:grid; grid-template-columns:1fr 1fr; }
             .JobHeaderActions .GTextBtn { min-height:44px; justify-content:center; }
             .JobTitleItem { display:grid !important; grid-template-columns:minmax(0,1fr) 112px; gap:12px; align-items:start !important; padding:14px !important; min-height:0; }
-            .JobTitleInfo { min-width:0; width:100%; }
+            .JobTitleInfo { min-width:0; width:100%; display:grid; grid-template-columns:1fr; }
+            .JobTitleInfo > .JobMetricCards { grid-column:1 / -1; }
+            .JobTitleActions { align-self:start; }
             .JobTitleName { font-size:17px !important; line-height:1.2; }
             .JobTitleLevel { line-height:1.35; margin-top:4px; }
             .JobTitleActions { width:112px; display:grid !important; grid-template-columns:repeat(2,36px); justify-content:end; align-content:start; gap:8px !important; }
@@ -3321,10 +3323,10 @@
             .JobTitleWage { min-width:0 !important; width:112px; font-size:16px !important; }
             .JobTotalCost { white-space:normal; line-height:1.25; }
             .JobMetricCards { grid-template-columns:minmax(0,1fr) minmax(0,1fr); width:100%; gap:6px; margin-top:8px; }
-            .JobMetricCard, .JobMetricCardInner { min-height:66px; }
-            .JobMetricFace { padding:8px 9px; overflow:hidden; }
+            .JobMetricCard, .JobMetricCardInner { height:74px; min-height:74px; }
+            .JobMetricFace { padding:9px 10px; overflow:hidden; display:flex; flex-direction:column; justify-content:center; }
             .JobMetricCard .value { font-size:14px; line-height:1.15; white-space:nowrap; }
-            .JobMetricCard .sub { font-size:9px; }
+            .JobMetricCard .sub { margin-top:4px; font-size:9px; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
             .FilledBar { max-width:100%; }
             .PermCategoryToggle { min-height:42px; }
         }
@@ -9646,12 +9648,12 @@
                 const cards = document.createElement('div');
                 cards.className = 'JobMetricCards';
                 cards.innerHTML =
-                    '<div class="JobMetricCard flipped" role="button" tabindex="0"><div class="JobMetricCardInner">' +
+                    '<div class="JobMetricCard flipped" role="button" tabindex="0" aria-label="Showing assigned staff. Tap to show planned positions."><div class="JobMetricCardInner">' +
                     '<div class="JobMetricFace JobMetricFront"><div class="label">Daily Cost</div><div class="value">' + money(plannedCost) + '</div><div class="sub">' + plannedCount + ' position' + (plannedCount === 1 ? '' : 's') + '</div></div>' +
-                    '<div class="JobMetricFace JobMetricBack"><div class="label">Daily Cost</div><div class="value">' + money(hiredCost) + '</div><div class="sub">' + assigned + ' assigned staff</div></div></div></div>' +
-                    '<div class="JobMetricCard flipped" role="button" tabindex="0"><div class="JobMetricCardInner">' +
+                    '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Daily Cost</div><div class="value">' + money(hiredCost) + '</div><div class="sub">' + assigned + ' assigned staff</div></div></div></div>' +
+                    '<div class="JobMetricCard flipped" role="button" tabindex="0" aria-label="Showing assigned staff. Tap to show planned positions."><div class="JobMetricCardInner">' +
                     '<div class="JobMetricFace JobMetricFront"><div class="label">Remaining</div><div class="value">' + money(plannedRemaining) + '</div><div class="sub">planned positions</div></div>' +
-                    '<div class="JobMetricFace JobMetricBack"><div class="label">Remaining</div><div class="value">' + money(hiredRemaining) + '</div><div class="sub">assigned staff</div></div></div></div>';
+                    '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Remaining</div><div class="value">' + money(hiredRemaining) + '</div><div class="sub">assigned staff</div></div></div></div>';
                 cards.querySelectorAll('.JobMetricCard').forEach(card => {
                     const flip = () => card.classList.toggle('flipped');
                     card.addEventListener('click', flip);
@@ -9799,13 +9801,13 @@
                     '<div class="JobMetricCard" role="button" tabindex="0" aria-label="Switch Job cost between planned positions and assigned staff">'+
                         '<div class="JobMetricCardInner">'+
                             '<div class="JobMetricFace JobMetricFront"><div class="label">Daily cost</div><div class="value">'+money(plannedCost)+'</div><div class="sub">'+plannedCount+' position'+(plannedCount===1?'':'s')+'</div></div>'+
-                            '<div class="JobMetricFace JobMetricBack"><div class="label">Assigned staff</div><div class="value">'+money(hiredCost)+'</div><div class="sub">'+assigned+' hired</div></div>'+
+                            '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Assigned staff</div><div class="value">'+money(hiredCost)+'</div><div class="sub">'+assigned+' hired</div></div>'+
                         '</div>'+
                     '</div>'+
                     '<div class="JobMetricCard" role="button" tabindex="0" aria-label="Switch Remaining between planned positions and assigned staff">'+
                         '<div class="JobMetricCardInner">'+
                             '<div class="JobMetricFace JobMetricFront"><div class="label">Remaining</div><div class="value">'+money(plannedRemaining)+'</div><div class="sub">planned</div></div>'+
-                            '<div class="JobMetricFace JobMetricBack"><div class="label">Remaining</div><div class="value">'+money(hiredRemaining)+'</div><div class="sub">assigned staff</div></div>'+
+                            '<div class="JobMetricFace JobMetricBack JobMetricBack"><div class="label">Remaining</div><div class="value">'+money(hiredRemaining)+'</div><div class="sub">assigned staff</div></div>'+
                         '</div>'+
                     '</div>';
                 cards.querySelectorAll('.JobMetricCard').forEach(card => {
