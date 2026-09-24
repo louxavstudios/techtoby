@@ -24,7 +24,12 @@
         html {
             width: 100%;
             min-height: 100%;
-            background: #D9D9D9 url('https://cdn.dummtoby.network/assets/100001.png') center / cover no-repeat fixed;
+            background-color: #D9D9D9;
+            background-image: url('https://cdn.dummtoby.network/assets/100001.png');
+            background-position: center bottom;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             overflow: hidden;
         }
 
@@ -46,7 +51,10 @@
             content: '';
             position: fixed;
             inset: 0;
-            background: url('https://cdn.dummtoby.network/assets/100001.png') center / cover no-repeat;
+            background-image: url('https://cdn.dummtoby.network/assets/100001.png');
+            background-position: center bottom;
+            background-size: cover;
+            background-repeat: no-repeat;
             z-index: -1;
             pointer-events: none;
         }
