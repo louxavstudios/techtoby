@@ -24,10 +24,10 @@
         html, body {
             position: fixed;
             inset: 0;
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
+            width: 100svw;
+            height: 100svh;
+            max-width: 100svw;
+            max-height: 100svh;
             overflow: hidden;
             overscroll-behavior: none;
             -webkit-overflow-scrolling: auto;
@@ -403,7 +403,7 @@
             display: none;
             top: 0;
             left: 0;
-            width: 100vw;   
+            width: 100svw;   
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -427,8 +427,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100svw;
+            height: 100svh;
             z-index: 0;
             opacity: 0;
             transition: opacity 0.25s ease-out;
@@ -710,14 +710,14 @@
             html, body {
                 position: fixed;
                 inset: 0;
-                width: 100vw;
-                height: 100vh;
+                width: 100svw;
+                height: 100svh;
                 touch-action: manipulation;
             }
 
             body::before {
-                width: 100vw;
-                height: 100vh;
+                width: 100svw;
+                height: 100svh;
             }
 
             .app-icon.mobile-disabled {
