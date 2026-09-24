@@ -771,11 +771,51 @@
             }
             .UpdateCardTitle { font-size: 14px; }
             body { height: 100dvh; }
-            .MainLayout { height: 100dvh; padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
-            .Sidebar { flex-wrap: nowrap; padding: 10px; margin: 8px 8px 0; gap: 6px; scrollbar-width: none; }
+            .MainLayout {
+                height: 100dvh;
+                padding-bottom: calc(122px + env(safe-area-inset-bottom));
+            }
+            .Sidebar {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: calc(58px + env(safe-area-inset-bottom));
+                z-index: 999997;
+                width: 100%;
+                height: 64px;
+                margin: 0;
+                padding: 7px 8px;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                gap: 4px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+                background: #D9D9D9;
+                box-shadow: 0 -5px 18px rgba(0,0,0,.06);
+                scrollbar-width: none;
+            }
             .Sidebar::-webkit-scrollbar { display: none; }
             .Sidebar > div:first-child { display: none !important; }
-            .SidebarTab { flex: 0 0 auto; min-height: 42px; justify-content: center; }
+            .SidebarTab {
+                flex: 1 0 auto;
+                min-width: 64px;
+                min-height: 48px;
+                padding: 6px 10px;
+                justify-content: center;
+                flex-direction: column;
+                gap: 2px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+            .SidebarTab .material-symbols-outlined { font-size: 20px; }
+            .SidebarTab.active { background: rgba(255,255,255,.58); }
             .ContentArea { margin: 8px; padding: 14px; min-height: 0; -webkit-overflow-scrolling: touch; }
             .TopButtons { position: fixed; top: auto; bottom: calc(94px + env(safe-area-inset-bottom)); right: 12px; z-index: 50; }
             .SettingsCard { padding: 14px; }
