@@ -769,27 +769,23 @@
             .UpdateCard {
                 padding: 14px;
             }
-            .UpdateCardTitle {
-                font-size: 14px;
-            }
-        }
-    </style>
-    <style>
-        @media (max-width: 768px) {
-            .MobileBlock { display: flex !important; }
-            body > *:not(.MobileBlock) { display: none !important; }
+            .UpdateCardTitle { font-size: 14px; }
+            body { height: 100dvh; }
+            .MainLayout { height: 100dvh; padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+            .Sidebar { flex-wrap: nowrap; padding: 10px; margin: 8px 8px 0; gap: 6px; scrollbar-width: none; }
+            .Sidebar::-webkit-scrollbar { display: none; }
+            .Sidebar > div:first-child { display: none !important; }
+            .SidebarTab { flex: 0 0 auto; min-height: 42px; justify-content: center; }
+            .ContentArea { margin: 8px; padding: 14px; min-height: 0; -webkit-overflow-scrolling: touch; }
+            .TopButtons { position: fixed; top: auto; bottom: calc(94px + env(safe-area-inset-bottom)); right: 12px; z-index: 50; }
+            .SettingsCard { padding: 14px; }
+            .ProfileGrid { grid-template-columns: 1fr; }
+            .ModalContent { max-height: 78dvh; padding: 16px; }
         }
     </style>
 </head>
 
 <body>
-    <div class="MobileBlock" style="display:none;position:fixed;inset:0;z-index:999999;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;font-family:'Roboto',sans-serif;">
-        <div style="background:rgba(255,255,255,0.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.1);">
-            <span style="font-size:48px;display:block;margin-bottom:16px;">🖥️</span>
-            <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:rgba(0,0,0,0.8);">Desktop Only</h2>
-            <p style="font-size:14px;color:rgba(0,0,0,0.5);line-height:1.6;">Sorry, this site is currently only available on desktop devices.</p>
-        </div>
-    </div>
     <div class="gridOverlay"></div>
 
     <div class="TopButtons">
