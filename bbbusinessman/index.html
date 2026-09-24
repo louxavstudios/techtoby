@@ -3298,7 +3298,11 @@
         .JobMetricCards { display:grid; grid-template-columns:repeat(2,minmax(100px,1fr)); gap:6px; margin-top:8px; }
         .JobMetricCard { position:relative; min-height:58px; padding:0; border-radius:9px; background:transparent; border:0; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
         .JobMetricCardInner { position:relative; width:100%; min-height:58px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
-        .JobMetricCard.flipped .JobMetricCardInner { transform:rotateY(180deg); }
+        .JobMetricCard.flipped .JobMetricCardInner, .SummaryFlipCard.flipped .SummaryFlipInner { transform:rotateY(180deg); }
+        .SummaryFlipCard { position:relative; min-height:88px; padding:0 !important; perspective:700px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .SummaryFlipInner { position:relative; width:100%; min-height:88px; transition:transform .42s cubic-bezier(.2,.7,.2,1); transform-style:preserve-3d; -webkit-transform-style:preserve-3d; }
+        .SummaryFlipFace { position:absolute; inset:0; padding:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
+        .SummaryFlipBack { transform:rotateY(180deg); }
         .JobMetricFace { position:absolute; inset:0; padding:7px 9px; border-radius:9px; background:rgba(255,255,255,.32); border:1px solid rgba(255,255,255,.45); backface-visibility:hidden; -webkit-backface-visibility:hidden; box-sizing:border-box; }
         .JobMetricBack { transform:rotateY(180deg); background:rgba(255,255,255,.48); }
         .JobMetricCard .label { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:rgba(0,0,0,.42); font-weight:700; }
@@ -6590,12 +6594,32 @@
                     <div class="label">Remaining</div>
                     <div class="value" style="color: ${remaining >= 0 ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)'}">$${remaining.toLocaleString()}</div>
                 </div>
-                <div class="SummaryCard">
-                    <div class="label">Employees</div>
-                    <div class="value">${totalEmployees}</div>
-                    <div class="sub">${jobTitles.length} title${jobTitles.length !== 1 ? 's' : ''} · avg $${avgPerEmployee.toLocaleString()}/day</div>
+                <div class="SummaryCard SummaryFlipCard flipped" id="employeesSummaryCard" role="button" tabindex="0" aria-label="Switch employees between assigned staff and planned positions">
+                    <div class="SummaryFlipInner">
+                        <div class="SummaryFlipFace">
+                            <div class="label">Employees</div>
+                            <div class="value">${totalEmployees}</div>
+                            <div class="sub">planned positions · ${jobTitles.length} title${jobTitles.length !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="SummaryFlipFace SummaryFlipBack">
+                            <div class="label">Assigned Staff</div>
+                            <div class="value">${employees.filter(emp => String(emp.businessLabelId) === String(activeJobBusinessId) && emp.jobIndex !== null && emp.jobIndex !== undefined).length}</div>
+                            <div class="sub">currently assigned to jobs</div>
+                        </div>
+                    </div>
                 </div>
             `;
+            const employeesCard = document.getElementById('employeesSummaryCard');
+            if (employeesCard) {
+                const flipEmployees = () => employeesCard.classList.toggle('flipped');
+                employeesCard.addEventListener('click', flipEmployees);
+                employeesCard.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        flipEmployees();
+                    }
+                });
+            }
         }
 
         function escapeHtml(text) {
