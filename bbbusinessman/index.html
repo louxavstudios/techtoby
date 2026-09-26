@@ -3487,6 +3487,13 @@
         #businessStatsContent>.SectionHeader{margin-top:28px!important;margin-bottom:14px!important}#businessStatsContent>div[style*="display:flex"][style*="flex-direction:column"]{gap:10px!important}#businessStatsContent>div[style*="font-size:13px"]{margin-top:8px}
         @media(max-width:768px){.BusinessDetailGrid{grid-template-columns:1fr!important;gap:10px!important}.BusinessDetailCard .bdc-body{padding:14px!important;gap:9px!important}.BusinessDetailCard .bdc-actions{display:none!important}#businessOverviewStats{grid-template-columns:1fr 1fr!important;gap:10px!important;margin:16px 0 26px!important}#businessOverviewStats .InventoryStat{padding:14px!important;border-radius:13px!important}.BusinessEditActions .GTextBtn{min-height:42px}}
     </style>
+    <style id="FinanceDataUX">
+        .FinanceToolbar{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin:14px 0 2px;font-size:12px;color:rgba(0,0,0,.5)}.FinanceToolbar .material-symbols-outlined{font-size:17px}.FinanceToolbar select{padding:7px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.3);font:inherit}
+        .FinanceWizardModal{width:min(440px,calc(100vw - 28px))}.FinanceWizardProgress{margin-bottom:20px;font-size:11px;color:rgba(0,0,0,.45)}.FinanceWizardProgress>div{height:4px;background:rgba(0,0,0,.08);border-radius:99px;margin-top:7px;overflow:hidden}.FinanceWizardProgress i{display:block;height:100%;width:16.66%;background:rgba(99,102,241,.8);transition:width .2s}
+        .FinanceWizardStep{display:none;min-height:135px}.FinanceWizardStep.active{display:block}.FinanceWizardHeading{font-size:18px;font-weight:600;margin-bottom:16px}.FinanceWizardHeading small{font-size:11px;font-weight:400;color:rgba(0,0,0,.42);margin-left:5px}.FinanceChoiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.FinanceChoiceGrid button{min-height:52px;border:1px solid rgba(255,255,255,.55);border-radius:11px;background:rgba(255,255,255,.25);font:inherit;font-size:12px;cursor:pointer}.FinanceChoiceGrid button.selected{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.5);color:rgb(79,70,229)}.FinanceChoiceGrid.two button{display:flex;align-items:center;justify-content:center;gap:7px}.FinanceWizardActions{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;margin-top:16px}
+        .FinanceDataTags{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0}.FinanceDataTags span{font-size:10px;padding:3px 7px;border-radius:99px;background:rgba(0,0,0,.055);text-transform:capitalize}.FinanceAmount{font-size:18px;font-weight:700;margin-top:8px}.FinanceAmount.income{color:rgba(22,163,74,.9)}.FinanceAmount.expense{color:rgba(220,38,38,.9)}
+        @media(max-width:768px){.FinanceToolbar{justify-content:space-between}.FinanceToolbar select{max-width:180px}.FinanceWizardStep{min-height:155px}}
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -3729,6 +3736,16 @@
                         <span class="material-symbols-outlined">add</span> Add
                     </button>
                 </div>
+                <div class="FinanceToolbar">
+                    <span class="material-symbols-outlined">sort</span>
+                    <label for="financeSort">Sort by</label>
+                    <select id="financeSort" onchange="renderSimpleFinanceGrid()">
+                        <option value="newest">Newest</option><option value="oldest">Oldest</option>
+                        <option value="name">Name</option><option value="lapse">Lapse</option>
+                        <option value="business">Business</option><option value="type">Type</option>
+                        <option value="subtype">Subtype</option><option value="amount-high">Amount: High to Low</option><option value="amount-low">Amount: Low to High</option>
+                    </select>
+                </div>
                 <div class="RecordGrid" id="financeRecordGrid"></div>
             </div>
 
@@ -3927,17 +3944,16 @@
 
     <!-- Finance Transaction Modal -->
     <div class="ModalOverlay" id="financeTransactionModal" onclick="if(event.target===this)closeModal('financeTransaction')">
-        <div class="ModalContent">
-            <div class="ModalTitle"><span>Add Transaction</span><button class="ModalClose" onclick="closeModal('financeTransaction')"><span class="material-symbols-outlined">close</span></button></div>
-            <div class="form-group"><label>Business</label><select id="financeBusinessSelect"></select></div>
-            <div class="InputRow">
-                <div class="form-group"><label>Type</label><select id="financeTxType"><option value="income">Income</option><option value="expense">Expense</option></select></div>
-                <div class="form-group"><label>Amount ($)</label><input type="number" id="financeTxAmount" min="0" step="1" placeholder="0"></div>
-            </div>
-            <div class="form-group"><label>Name</label><input type="text" id="financeTxName" placeholder="e.g. Lunch sales"></div>
-            <div class="form-group"><label>In-Game Day</label><select id="financeTxDay"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select></div>
-            <div class="form-group"><label>Description</label><textarea id="financeTxDescription" rows="3" placeholder="Describe the transaction..."></textarea></div>
-            <div style="display:flex;justify-content:flex-end;gap:8px;"><button class="GTextBtn" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" onclick="saveFinanceTransaction()"><span class="material-symbols-outlined">check</span> Save</button></div>
+        <div class="ModalContent FinanceWizardModal">
+            <div class="ModalTitle"><span>Add Financial Record</span><button class="ModalClose" onclick="closeModal('financeTransaction')"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="FinanceWizardProgress"><span id="financeStepLabel">Step 1 of 6</span><div><i id="financeStepBar"></i></div></div>
+            <section class="FinanceWizardStep active" data-finance-step="1"><div class="FinanceWizardHeading">Name this record <small>Optional</small></div><div class="form-group"><input type="text" id="financeTxName" placeholder="e.g. Friday sales"></div></section>
+            <section class="FinanceWizardStep" data-finance-step="2"><div class="FinanceWizardHeading">What lapse does it represent?</div><div class="FinanceChoiceGrid" id="financeLapseChoices"><button type="button" data-value="Bloxburg Day">Bloxburg Day</button><button type="button" data-value="Week">Week</button><button type="button" data-value="Single Transaction">Single Transaction</button><button type="button" data-value="Other">Other</button></div><input type="hidden" id="financeTxLapse"></section>
+            <section class="FinanceWizardStep" data-finance-step="3"><div class="FinanceWizardHeading">Which business?</div><div class="form-group"><select id="financeBusinessSelect"></select></div></section>
+            <section class="FinanceWizardStep" data-finance-step="4"><div class="FinanceWizardHeading">Income or expense?</div><div class="FinanceChoiceGrid two"><button type="button" data-finance-type="income"><span class="material-symbols-outlined">trending_up</span>Income</button><button type="button" data-finance-type="expense"><span class="material-symbols-outlined">trending_down</span>Expense</button></div><input type="hidden" id="financeTxType"></section>
+            <section class="FinanceWizardStep" data-finance-step="5"><div class="FinanceWizardHeading">Add a subtype <small>Optional · one word</small></div><div class="form-group"><input type="text" id="financeTxSubtype" placeholder="e.g. Bills" maxlength="24"></div></section>
+            <section class="FinanceWizardStep" data-finance-step="6"><div class="FinanceWizardHeading">How much?</div><div class="form-group"><label>Amount ($)</label><input type="number" id="financeTxAmount" min="0" step="1" placeholder="0"></div><div class="ContentDesc">The amount is stored with the lapse so this history can be used for future financial estimates.</div></section>
+            <div class="FinanceWizardActions"><button class="GTextBtn" id="financeWizardBack" type="button" onclick="financeWizardBack()" hidden>Back</button><span></span><button class="GTextBtn" type="button" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" id="financeWizardNext" type="button" onclick="financeWizardNext()">Next</button><button class="GTextBtn primary" id="financeWizardSave" type="button" onclick="saveFinanceTransaction()" hidden><span class="material-symbols-outlined">check</span>Add Record</button></div>
         </div>
     </div>
 
@@ -9889,49 +9905,118 @@
             });
         }
 
+        let financeWizardStep = 1;
+
+        function setFinanceWizardStep(step) {
+            financeWizardStep = Math.max(1, Math.min(6, step));
+            document.querySelectorAll('.FinanceWizardStep').forEach(el => el.classList.toggle('active', Number(el.dataset.financeStep) === financeWizardStep));
+            document.getElementById('financeStepLabel').textContent = 'Step ' + financeWizardStep + ' of 6';
+            document.getElementById('financeStepBar').style.width = (financeWizardStep / 6 * 100) + '%';
+            document.getElementById('financeWizardBack').hidden = financeWizardStep === 1;
+            document.getElementById('financeWizardNext').hidden = financeWizardStep === 6;
+            document.getElementById('financeWizardSave').hidden = financeWizardStep !== 6;
+        }
+
         function openNewFinanceTransactionModal() {
             if (!businessLabels.length) { alert('Add a business first.'); return; }
             populateBusinessSelect('financeBusinessSelect');
-            document.getElementById('financeTxType').value='income';
-            document.getElementById('financeTxAmount').value='';
-            document.getElementById('financeTxName').value='';
-            document.getElementById('financeTxDescription').value='';
+            document.getElementById('financeTxName').value = '';
+            document.getElementById('financeTxLapse').value = '';
+            document.getElementById('financeTxType').value = '';
+            document.getElementById('financeTxSubtype').value = '';
+            document.getElementById('financeTxAmount').value = '';
+            document.querySelectorAll('.FinanceChoiceGrid button').forEach(button => button.classList.remove('selected'));
+            setFinanceWizardStep(1);
             openModal('financeTransaction');
         }
 
+        function financeWizardNext() {
+            if (financeWizardStep === 2 && !document.getElementById('financeTxLapse').value) return;
+            if (financeWizardStep === 3 && !document.getElementById('financeBusinessSelect').value) return;
+            if (financeWizardStep === 4 && !document.getElementById('financeTxType').value) return;
+            if (financeWizardStep === 5) {
+                const subtype = document.getElementById('financeTxSubtype').value.trim();
+                if (subtype && /\s/.test(subtype)) { document.getElementById('financeTxSubtype').focus(); return; }
+            }
+            setFinanceWizardStep(financeWizardStep + 1);
+        }
+
+        function financeWizardBack() { setFinanceWizardStep(financeWizardStep - 1); }
+
+        document.getElementById('financeLapseChoices').addEventListener('click', event => {
+            const button = event.target.closest('[data-value]'); if (!button) return;
+            document.querySelectorAll('#financeLapseChoices button').forEach(b => b.classList.toggle('selected', b === button));
+            document.getElementById('financeTxLapse').value = button.dataset.value;
+            setTimeout(() => financeWizardNext(), 120);
+        });
+        document.querySelectorAll('[data-finance-type]').forEach(button => button.addEventListener('click', () => {
+            document.querySelectorAll('[data-finance-type]').forEach(b => b.classList.toggle('selected', b === button));
+            document.getElementById('financeTxType').value = button.dataset.financeType;
+            setTimeout(() => financeWizardNext(), 120);
+        }));
+
         function saveFinanceTransaction() {
-            const businessId=Number(document.getElementById('financeBusinessSelect').value);
-            const type=document.getElementById('financeTxType').value;
-            const amount=parseFloat(document.getElementById('financeTxAmount').value)||0;
-            const name=document.getElementById('financeTxName').value.trim();
-            const inGameDay=document.getElementById('financeTxDay').value;
-            const description=document.getElementById('financeTxDescription').value.trim();
-            if (!businessId || !name || amount<=0) return;
-            const now=new Date();
-            const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-            financeRecords.push({id:Date.now(),businessId:businessId,name:name,date:date,inGameDay:inGameDay,description:description,entries:[{id:Date.now()+1,type:type,description:description,amount:amount,category:'Other'}]});
+            const businessId = document.getElementById('financeBusinessSelect').value;
+            const type = document.getElementById('financeTxType').value;
+            const amount = parseFloat(document.getElementById('financeTxAmount').value) || 0;
+            const name = document.getElementById('financeTxName').value.trim();
+            const lapse = document.getElementById('financeTxLapse').value;
+            const subtype = document.getElementById('financeTxSubtype').value.trim();
+            if (!businessId || !type || !lapse || amount <= 0 || (subtype && /\s/.test(subtype))) return;
+            const now = new Date();
+            const date = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+            financeRecords.push({
+                id: Date.now(), businessId, name, date, lapse, subtype,
+                entries: [{ id: Date.now()+1, type, amount, category: subtype || 'Other' }]
+            });
             saveFinanceRecords();
             closeModal('financeTransaction');
-            renderFinanceRecordGrid();
+            renderSimpleFinanceGrid();
+        }
+
+        function getFinanceRecordData(record) {
+            const entry = (record.entries || [])[0] || {};
+            const biz = businessLabels.find(b => String(b.id) === String(record.businessId));
+            return {
+                business: biz ? biz.name : 'Unassigned business',
+                type: entry.type || 'income',
+                amount: Number(entry.amount) || 0,
+                lapse: record.lapse || (record.inGameDay ? 'Bloxburg Day' : 'Single Transaction'),
+                subtype: record.subtype || entry.category || '',
+                name: record.name || ''
+            };
         }
 
         function renderSimpleFinanceGrid() {
-            const grid=document.getElementById('financeRecordGrid');
+            const grid = document.getElementById('financeRecordGrid');
             if (!grid) return;
-            grid.innerHTML='';
-            const sorted=[...financeRecords].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+            grid.innerHTML = '';
+            const sort = document.getElementById('financeSort')?.value || 'newest';
+            const sorted = [...financeRecords];
+            sorted.sort((a,b) => {
+                const A=getFinanceRecordData(a), B=getFinanceRecordData(b);
+                if(sort==='oldest') return (a.date||'').localeCompare(b.date||'');
+                if(sort==='name') return A.name.localeCompare(B.name);
+                if(sort==='lapse') return A.lapse.localeCompare(B.lapse);
+                if(sort==='business') return A.business.localeCompare(B.business);
+                if(sort==='type') return A.type.localeCompare(B.type);
+                if(sort==='subtype') return A.subtype.localeCompare(B.subtype);
+                if(sort==='amount-high') return B.amount-A.amount;
+                if(sort==='amount-low') return A.amount-B.amount;
+                return (b.date||'').localeCompare(a.date||'') || b.id-a.id;
+            });
             sorted.forEach(record => {
-                const biz=businessLabels.find(b=>Number(b.id)===Number(record.businessId));
-                const income=(record.entries||[]).filter(e=>e.type==='income').reduce((s,e)=>s+(e.amount||0),0);
-                const expense=(record.entries||[]).filter(e=>e.type==='expense').reduce((s,e)=>s+(e.amount||0),0);
-                const net=income-expense;
-                const card=document.createElement('div');
-                card.className='RecordCard';
-                card.innerHTML='<div class="RecordCardActions"><button class="StaffCardBtn danger" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,.7);">close</span></button></div><div class="RecordCardTitle">'+escapeHtml(record.name||'Transaction')+'</div><div class="RecordCardMeta">'+escapeHtml(biz?biz.name:'Unassigned business')+' · '+escapeHtml(record.inGameDay||'')+' · '+escapeHtml(record.date||'')+'</div>'+(record.description?'<div style="font-size:12px;color:rgba(0,0,0,.55);margin:6px 0;">'+escapeHtml(record.description)+'</div>':'')+'<div style="font-size:16px;font-weight:700;color:'+(net>=0?'rgba(22,163,74,.9)':'rgba(220,38,38,.9)')+';">'+(net>=0?'+':'-')+'$'+Math.abs(net).toLocaleString()+'</div>';
+                const data=getFinanceRecordData(record);
+                const card=document.createElement('div'); card.className='RecordCard FinanceDataCard';
+                card.innerHTML='<div class="RecordCardActions"><button class="StaffCardBtn danger" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,.7);">close</span></button></div>'+
+                    '<div class="RecordCardTitle">'+escapeHtml(data.name || data.subtype || (data.type==='income'?'Income':'Expense'))+'</div>'+
+                    '<div class="FinanceDataTags"><span>'+escapeHtml(data.business)+'</span><span>'+escapeHtml(data.lapse)+'</span><span>'+escapeHtml(data.type)+'</span>'+(data.subtype?'<span>'+escapeHtml(data.subtype)+'</span>':'')+'</div>'+
+                    '<div class="RecordCardMeta">'+escapeHtml(record.date||'')+'</div>'+
+                    '<div class="FinanceAmount '+data.type+'">'+(data.type==='income'?'+':'-')+'$'+data.amount.toLocaleString()+'</div>';
                 card.querySelector('button').onclick=()=>{ removeFinanceRecord(record.id); renderSimpleFinanceGrid(); };
                 grid.appendChild(card);
             });
-            if (!sorted.length) grid.innerHTML='<div class="EmptyState"><span class="material-symbols-outlined">receipt_long</span><div>No transactions yet.</div></div>';
+            if (!sorted.length) grid.innerHTML='<div class="EmptyState"><span class="material-symbols-outlined">monitoring</span><div>No financial data yet.</div><small>Add records over time to build business history for future estimates.</small></div>';
         }
 
         // ===== INIT =====
