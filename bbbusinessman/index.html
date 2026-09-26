@@ -3494,6 +3494,13 @@
         .FinanceDataTags{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0}.FinanceDataTags span{font-size:10px;padding:3px 7px;border-radius:99px;background:rgba(0,0,0,.055);text-transform:capitalize}.FinanceAmount{font-size:18px;font-weight:700;margin-top:8px}.FinanceAmount.income{color:rgba(22,163,74,.9)}.FinanceAmount.expense{color:rgba(220,38,38,.9)}
         @media(max-width:768px){.FinanceToolbar{justify-content:space-between}.FinanceToolbar select{max-width:180px}.FinanceWizardStep{min-height:155px}}
     </style>
+    <style id="FinanceEmptyAddStyle">
+        .FinanceEmptyAdd{width:100%;border:0;font:inherit;color:inherit;cursor:pointer;text-align:center;transition:background .15s ease,transform .15s ease;touch-action:manipulation}
+        .FinanceEmptyAdd:hover{background:rgba(255,255,255,.22)}
+        .FinanceEmptyAdd:active{transform:scale(.995)}
+        .FinanceEmptyAdd:focus-visible{outline:2px solid rgba(99,102,241,.55);outline-offset:2px}
+        .FinanceEmptyAdd .material-symbols-outlined{color:rgba(99,102,241,.72)}
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -10025,7 +10032,7 @@
                 card.querySelector('button').onclick=()=>{ removeFinanceRecord(record.id); renderSimpleFinanceGrid(); };
                 grid.appendChild(card);
             });
-            if (!sorted.length) grid.innerHTML='<div class="EmptyState"><span class="material-symbols-outlined">monitoring</span><div>No financial data yet.</div><small>Add records over time to build business history for future estimates.</small></div>';
+            if (!sorted.length) grid.innerHTML='<button type="button" class="EmptyState FinanceEmptyAdd" onclick="openNewFinanceTransactionModal()" aria-label="Add your first financial record"><span class="material-symbols-outlined">add_circle</span><div>No financial data yet.</div><small>Tap here to add your first record and start building business history for future estimates.</small></button>';
         }
 
         // ===== INIT =====
