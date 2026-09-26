@@ -3478,6 +3478,15 @@
         .EmployeeWizardProfile span { font-size:11px; color:rgba(0,0,0,.48); }
         @media(max-width:768px) { .EmployeeWizardModal { width:calc(100vw - 24px); } .EmployeeWizardStep { min-height:145px; } }
     </style>
+    <style id="BusinessTabUX">
+        .BusinessDetailGrid{gap:14px!important}.BusinessDetailCard{outline:none}.BusinessDetailCard:focus-visible{box-shadow:0 0 0 3px rgba(99,102,241,.22),0 6px 20px rgba(0,0,0,.1)}
+        .BusinessDetailCard .bdc-header{position:relative;padding-right:22px}.BusinessDetailCard .bdc-header:after{content:'›';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:24px;color:rgba(0,0,0,.28)}
+        .BusinessEditPanel{display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:14px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4)}.BusinessEditPanel textarea{resize:vertical;min-height:80px}
+        .BusinessColorField{width:74px;flex:none!important}.BusinessColorField input{width:100%;height:38px;border:0;padding:0;cursor:pointer;border-radius:8px;overflow:hidden}.BusinessEditActions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+        #businessOverviewStats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px!important;margin:18px 0 26px!important}#businessOverviewStats .InventoryStat{margin:0!important;min-width:0}
+        #businessStatsContent>.SectionHeader{margin-top:28px!important;margin-bottom:14px!important}#businessStatsContent>div[style*="display:flex"][style*="flex-direction:column"]{gap:10px!important}#businessStatsContent>div[style*="font-size:13px"]{margin-top:8px}
+        @media(max-width:768px){.BusinessDetailGrid{grid-template-columns:1fr!important;gap:10px!important}.BusinessDetailCard .bdc-body{padding:14px!important;gap:9px!important}.BusinessDetailCard .bdc-actions{display:none!important}#businessOverviewStats{grid-template-columns:1fr 1fr!important;gap:10px!important;margin:16px 0 26px!important}#businessOverviewStats .InventoryStat{padding:14px!important;border-radius:13px!important}.BusinessEditActions .GTextBtn{min-height:42px}}
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -3697,51 +3706,13 @@
                     </div>
                     <div id="businessOverviewStats" style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;"></div>
                     <div id="businessEditView" style="display:none;">
-                        <div style="display:flex;flex-direction:column;gap:12px;">
-                            <div class="InputRow">
-                                <div class="form-group" style="flex:1;">
-                                    <label>Business Name</label>
-                                    <input type="text" id="businessNameInput" placeholder="e.g. Golhem Markets">
-                                </div>
-                                <div class="form-group" style="max-width:60px;">
-                                    <label>Color</label>
-                                    <input type="color" id="businessColorInput" value="#6366f1" style="width:100%;height:38px;border:none;padding:0;cursor:pointer;">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Logo</label>
-                                <div id="businessLogoPreview" class="ItemImagePreviewPlaceholder" onclick="document.getElementById('businessLogoFile').click()" style="height:60px;">
-                                    <span class="material-symbols-outlined" style="font-size:20px;">image</span>
-                                    Click to upload or enter URL
-                                </div>
-                                <input type="file" id="businessLogoFile" accept="image/*" style="display:none" onchange="handleBusinessLogoFile(this)">
-                                <input type="text" id="businessLogoUrlInput" placeholder="Or paste logo URL" oninput="previewBusinessLogo(this.value)" style="margin-top:4px;">
-                            </div>
-                            <div class="form-group">
-                                <label>Owner Name</label>
-                                <input type="text" id="businessOwnerInput" placeholder="e.g. Techtoby">
-                            </div>
-                            <div class="form-group">
-                                <label>Owner Profile URL</label>
-                                <input type="text" id="businessOwnerProfileInput" placeholder="e.g. roblox.com/users/...">
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="businessDescInput" placeholder="What does this business do?" rows="2" style="resize:vertical;"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Type / Category</label>
-                                <input type="text" id="businessTypeInput" placeholder="e.g. Restaurant, Shop, Café">
-                            </div>
+                        <div class="BusinessEditPanel">
+                            <div class="InputRow"><div class="form-group" style="flex:1;"><label>Business Name</label><input type="text" id="businessNameInput" placeholder="e.g. Golhem Logistics"></div><div class="form-group BusinessColorField"><label>Color</label><input type="color" id="businessColorInput" value="#6366f1"></div></div>
+                            <div class="form-group"><label>Type / Category</label><input type="text" id="businessTypeInput" placeholder="e.g. Logistics, Restaurant, Shop"></div>
+                            <div class="form-group"><label>Description</label><textarea id="businessDescInput" placeholder="What does this business do?" rows="3"></textarea></div>
                         </div>
                         <input type="hidden" id="editBusinessId" value="">
-                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                            <button class="GTextBtn" onclick="closeBusinessEdit()">Cancel</button>
-                            <button class="GTextBtn primary" onclick="saveBusinessDetail()">
-                                <span class="material-symbols-outlined">check</span>
-                                <span id="saveBusinessBtnText">Save</span>
-                            </button>
-                        </div>
+                        <div class="BusinessEditActions"><button class="GTextBtn" onclick="closeBusinessEdit()">Cancel</button><button class="GTextBtn primary" onclick="saveBusinessDetail()"><span class="material-symbols-outlined">check</span>Save</button></div>
                     </div>
                     <div id="businessStatsContent"></div>
                 </div>
@@ -7379,7 +7350,7 @@
         }
 
         function addBusinessLabel() {
-            businessLabels.push({ id: Date.now(), name: 'New Business', color: '#6366f1', logo: null, ownerName: '', ownerProfile: '', description: '', type: '' });
+            businessLabels.push({ id: Date.now(), name: 'New Business', color: '#6366f1', description: '', type: '' });
             saveBusinessLabels();
             renderBusinessDetailGrid();
             openBusinessEdit(businessLabels.length - 1);
@@ -7418,11 +7389,11 @@
                 const staffCount = employees.filter(e => e.businessLabelId === biz.id).length;
 
                 html += `
-                    <div class="BusinessDetailCard" onclick="openBusinessDetailView(${idx})">
+                    <div class="BusinessDetailCard" role="button" tabindex="0" onclick="openBusinessDetailView(${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBusinessDetailView(${idx})}">
                         <div class="bdc-banner" style="background:${biz.color || '#6366f1'};"></div>
                         <div class="bdc-body">
                             <div class="bdc-header">
-                                ${biz.logo ? `<img class="bdc-logo" src="${biz.logo}" onerror="this.style.display='none'">` : `<div class="bdc-logo-placeholder"><span class="material-symbols-outlined" style="font-size:18px;">store</span></div>`}
+                                <div class="bdc-logo-placeholder" style="background:${biz.color || '#6366f1'}22;color:${biz.color || '#6366f1'};"><span class="material-symbols-outlined" style="font-size:18px;">store</span></div>
                                 <div>
                                     <div class="bdc-name">${escapeHtml(biz.name)}</div>
                                     ${biz.type ? `<div style="font-size:11px;color:rgba(0,0,0,0.4);margin-top:1px;">${escapeHtml(biz.type)}</div>` : ''}
@@ -7549,7 +7520,6 @@
             // Business info
             html += `<div class="SectionHeader" style="margin-top:16px;">Details</div>`;
             html += `<div style="display:flex;flex-direction:column;gap:6px;padding:8px 0;">`;
-            if (biz.ownerName) html += `<div style="font-size:13px;color:rgba(0,0,0,0.5);"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">person</span> Owner: <strong>${escapeHtml(biz.ownerName)}</strong></div>`;
             if (biz.type) html += `<div style="font-size:13px;color:rgba(0,0,0,0.5);"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">category</span> Type: ${escapeHtml(biz.type)}</div>`;
             if (biz.description) html += `<div style="font-size:13px;color:rgba(0,0,0,0.5);"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">description</span> ${escapeHtml(biz.description)}</div>`;
             html += `</div>`;
@@ -7578,16 +7548,8 @@
             document.getElementById('businessDetailViewTitle').textContent = 'Edit ' + (biz.name || 'Business');
             document.getElementById('businessNameInput').value = biz.name || '';
             document.getElementById('businessColorInput').value = biz.color || '#6366f1';
-            document.getElementById('businessOwnerInput').value = biz.ownerName || '';
-            document.getElementById('businessOwnerProfileInput').value = biz.ownerProfile || '';
             document.getElementById('businessDescInput').value = biz.description || '';
             document.getElementById('businessTypeInput').value = biz.type || '';
-            document.getElementById('businessLogoUrlInput').value = biz.logo || '';
-            if (biz.logo) {
-                previewBusinessLogo(biz.logo);
-            } else {
-                resetBusinessLogoPreview();
-            }
         }
 
         function closeBusinessEdit() {
@@ -7653,9 +7615,6 @@
             if (!biz) return;
             biz.name = document.getElementById('businessNameInput').value.trim() || 'Unnamed';
             biz.color = document.getElementById('businessColorInput').value;
-            biz.logo = document.getElementById('businessLogoUrlInput').value.trim() || null;
-            biz.ownerName = document.getElementById('businessOwnerInput').value.trim();
-            biz.ownerProfile = document.getElementById('businessOwnerProfileInput').value.trim();
             biz.description = document.getElementById('businessDescInput').value.trim();
             biz.type = document.getElementById('businessTypeInput').value.trim();
             saveBusinessLabels();
