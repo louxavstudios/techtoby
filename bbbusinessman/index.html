@@ -4149,44 +4149,6 @@
         </div>
     </div>
 
-    <!-- Finance Record Modal -->
-    <div class="ModalOverlay" id="financeRecordModal" onclick="if(event.target===this)closeModal('financeRecord')">
-        <div class="ModalContent" style="min-width:360px;">
-            <div class="ModalTitle">
-                <span id="financeRecordModalTitle">New Daily Record</span>
-                <button class="ModalClose" onclick="closeModal('financeRecord')">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="form-group">
-                <label>Record Name</label>
-                <input type="text" id="financeRecordName" placeholder="e.g. Opening Day Sales">
-            </div>
-            <div class="form-group">
-                <label>Date</label>
-                <input type="date" id="financeRecordDate">
-            </div>
-            <div class="form-group">
-                <label>In-Game Day</label>
-                <select id="financeRecordInGameDay">
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="GTextBtn" onclick="closeModal('financeRecord')">Cancel</button>
-                <button class="GTextBtn primary" onclick="saveFinanceRecord()">
-                    <span class="material-symbols-outlined">check</span> Save
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Finance Entry Modal -->
     <div class="ModalOverlay" id="financeEntryModal" onclick="if(event.target===this)closeModal('financeEntry')">
         <div class="ModalContent" style="min-width:360px;">
@@ -8248,85 +8210,11 @@
             localStorage.setItem('bbFinanceRecords', JSON.stringify(financeRecords));
         }
 
-        function openNewFinanceRecordModal() {
-            document.getElementById('financeRecordModalTitle').textContent = 'New Daily Record';
-            document.getElementById('financeRecordName').value = '';
-            document.getElementById('financeRecordDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('financeRecordInGameDay').value = 'Monday';
-            editingFinanceRecordId = null;
-            openModal('financeRecord');
-        }
-
-        function openEditFinanceRecordModal(id) {
-            const record = financeRecords.find(r => r.id === id);
-            if (!record) return;
-            document.getElementById('financeRecordModalTitle').textContent = 'Edit Daily Record';
-            document.getElementById('financeRecordName').value = record.name || '';
-            document.getElementById('financeRecordDate').value = record.date;
-            document.getElementById('financeRecordInGameDay').value = record.inGameDay;
-            editingFinanceRecordId = id;
-            openModal('financeRecord');
-        }
-
-        function saveFinanceRecord() {
-            const name = document.getElementById('financeRecordName').value.trim();
-            const date = document.getElementById('financeRecordDate').value;
-            const inGameDay = document.getElementById('financeRecordInGameDay').value;
-            if (!date) return;
-            if (editingFinanceRecordId !== null) {
-                const record = financeRecords.find(r => r.id === editingFinanceRecordId);
-                if (record) { record.name = name; record.date = date; record.inGameDay = inGameDay; }
-            } else {
-                financeRecords.push({ id: Date.now(), name, date, inGameDay, entries: [] });
-            }
-            saveFinanceRecords();
-            closeModal('financeRecord');
-            renderFinanceRecordGrid();
-        }
-
         function removeFinanceRecord(id) {
             if (!confirm('Delete this record?')) return;
-            financeRecords = financeRecords.filter(r => r.id !== id);
+            financeRecords = financeRecords.filter(record => record.id !== id);
             saveFinanceRecords();
-            if (activeFinanceId === id) closeFinanceDetail();
-            renderFinanceRecordGrid();
-        }
-
-        function renderFinanceRecordGrid() {
-            const grid = document.getElementById('financeRecordGrid');
-            grid.innerHTML = '';
-            const sorted = [...financeRecords].sort((a, b) => b.date.localeCompare(a.date));
-
-            sorted.forEach(record => {
-                const totalIncome = record.entries.filter(e => e.type === 'income').reduce((s, e) => s + (e.amount || 0), 0);
-                const totalExpense = record.entries.filter(e => e.type === 'expense').reduce((s, e) => s + (e.amount || 0), 0);
-                const net = totalIncome - totalExpense;
-
-                const card = document.createElement('div');
-                card.className = 'RecordCard';
-                card.onclick = () => openFinanceDetail(record.id);
-                card.innerHTML = `
-                    <div class="RecordCardActions">
-                        <button class="StaffCardBtn" onclick="event.stopPropagation();openEditFinanceRecordModal(${record.id})" title="Edit"><span class="material-symbols-outlined" style="font-size:15px;">edit</span></button>
-                        <button class="StaffCardBtn danger" onclick="event.stopPropagation();removeFinanceRecord(${record.id})" title="Delete"><span class="material-symbols-outlined" style="font-size:15px;color:rgba(239,68,68,0.7);">close</span></button>
-                    </div>
-                    <div class="RecordCardTitle">${escapeHtml(record.name || record.inGameDay)}</div>
-                    <div class="RecordCardMeta"><span class="material-symbols-outlined" style="font-size:14px;">calendar_today</span> ${record.date}${record.name ? ' · ' + escapeHtml(record.inGameDay) : ''}</div>
-                    <div class="RecordCardStats">
-                        <span>${record.entries.length} entr${record.entries.length !== 1 ? 'ies' : 'y'}</span>
-                        <span style="color:rgba(22,163,74,0.9);">+$${totalIncome.toLocaleString()}</span>
-                        <span style="color:rgba(220,38,38,0.9);">-$${totalExpense.toLocaleString()}</span>
-                    </div>
-                    <div style="font-size:13px;font-weight:600;color:${net >= 0 ? 'rgba(22,163,74,0.9)' : 'rgba(220,38,38,0.9)'};">Net: ${net >= 0 ? '+' : ''}$${net.toLocaleString()}</div>
-                `;
-                grid.appendChild(card);
-            });
-
-            const addCard = document.createElement('div');
-            addCard.className = 'AddRecordCard';
-            addCard.onclick = () => openNewFinanceRecordModal();
-            addCard.innerHTML = '<span class="material-symbols-outlined" style="font-size:36px;">add_circle</span><span style="font-size:13px;font-weight:500;">New Record</span>';
-            grid.appendChild(addCard);
+            renderSimpleFinanceGrid();
         }
 
         function openFinanceDetail(id) {
@@ -10032,7 +9920,19 @@
                 card.querySelector('button').onclick=()=>{ removeFinanceRecord(record.id); renderSimpleFinanceGrid(); };
                 grid.appendChild(card);
             });
-            if (!sorted.length) grid.innerHTML='<button type="button" class="EmptyState FinanceEmptyAdd" onclick="openNewFinanceTransactionModal()" aria-label="Add your first financial record"><span class="material-symbols-outlined">add_circle</span><div>No financial data yet.</div><small>Tap here to add your first record and start building business history for future estimates.</small></button>';
+            if (!sorted.length) {
+                const empty = document.createElement('button');
+                empty.type = 'button';
+                empty.className = 'EmptyState FinanceEmptyAdd';
+                empty.setAttribute('aria-label', 'Add your first financial record');
+                empty.innerHTML = '<span class="material-symbols-outlined">add_circle</span><div>No financial data yet.</div><small>Tap here to add your first record and start building business history for future estimates.</small>';
+                empty.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openNewFinanceTransactionModal();
+                });
+                grid.appendChild(empty);
+            }
         }
 
         // ===== INIT =====
