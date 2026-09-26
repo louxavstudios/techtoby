@@ -3710,6 +3710,8 @@
                             <span class="material-symbols-outlined">arrow_back</span>
                         </button>
                         <div class="ContentTitle" id="businessDetailViewTitle">Business</div>
+                        <div style="flex:1;"></div>
+                        <button class="GTextBtn danger BusinessDeleteBtn" onclick="deleteActiveBusiness()" title="Delete business"><span class="material-symbols-outlined">delete</span><span>Delete</span></button>
                     </div>
                     <div id="businessOverviewStats" style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;"></div>
                     <div id="businessEditView" style="display:none;">
@@ -7374,17 +7376,19 @@
         }
 
         function removeBusinessLabel(id) {
-            businessLabels = businessLabels.filter(l => l.id !== id);
-            employees.forEach(emp => {
-                if (emp.businessLabelId === id) emp.businessLabelId = null;
-            });
-            saveEmployees();
-            saveBusinessLabels();
-            renderBusinessDetailGrid();
+            const biz = businessLabels.find(label => String(label.id) === String(id));
+            if (!biz || !confirm('Delete "' + (biz.name || 'this business') + '"? Staff assigned to it will become unassigned.')) return;
+            businessLabels = businessLabels.filter(label => String(label.id) !== String(id));
+            employees.forEach(emp => { if (String(emp.businessLabelId) === String(id)) emp.businessLabelId = null; });
+            if (typeof jobsByBusiness !== 'undefined') delete jobsByBusiness[String(id)];
+            if (typeof financeRecords !== 'undefined') financeRecords = financeRecords.filter(record => String(record.businessId) !== String(id));
+            saveEmployees(); saveBusinessLabels();
+            if (typeof saveBusinessJobs === 'function') saveBusinessJobs();
+            if (typeof saveFinanceRecords === 'function') saveFinanceRecords();
+            if (activeBusinessIdx >= 0) closeBusinessDetailView(); else renderBusinessDetailGrid();
             renderStaffGrid();
-            if (typeof jobsByBusiness !== "undefined") delete jobsByBusiness[String(id)];
-            if (typeof saveBusinessJobs === "function") saveBusinessJobs();
-            if (typeof renderJobBusinessSelect === "function") renderJobBusinessSelect();
+            if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
+            if (typeof renderSimpleFinanceGrid === 'function') renderSimpleFinanceGrid();
         }
 
         function updateBusinessLabel(id, field, value) {
@@ -7452,6 +7456,11 @@
             document.getElementById('businessEditView').style.display = 'none';
             document.getElementById('businessDetailViewTitle').textContent = biz.name || 'Business';
             renderBusinessOverview(idx);
+        }
+
+        function deleteActiveBusiness() {
+            const biz = businessLabels[activeBusinessIdx];
+            if (biz) removeBusinessLabel(biz.id);
         }
 
         function closeBusinessDetailView() {
