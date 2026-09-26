@@ -3459,6 +3459,25 @@
             .JobMobileSalary span { font-size:10px; }
         }
     </style>
+    <style id="EmployeeWizardStyles">
+        .EmployeeWizardModal { width:min(430px,calc(100vw - 28px)); }
+        .EmployeeWizardProgress { display:flex; align-items:center; justify-content:center; margin:2px 0 22px; }
+        .EmployeeWizardProgress span { width:28px; height:28px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.08); color:rgba(0,0,0,.45); font-size:12px; font-weight:600; }
+        .EmployeeWizardProgress span.active { background:rgba(99,102,241,.9); color:white; }
+        .EmployeeWizardProgress span.done { background:rgba(99,102,241,.22); color:rgba(79,70,229,.9); }
+        .EmployeeWizardProgress i { width:48px; height:2px; background:rgba(0,0,0,.09); }
+        .EmployeeWizardStep { display:none; min-height:125px; }
+        .EmployeeWizardStep.active { display:block; }
+        .EmployeeWizardHeading { font-size:18px; font-weight:600; margin-bottom:15px; color:rgba(0,0,0,.82); }
+        .EmployeeWizardActions { display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:8px; margin-top:18px; }
+        .EmployeeWizardProfile { margin-top:14px; padding:12px; border-radius:12px; background:rgba(255,255,255,.3); display:flex; align-items:center; gap:12px; }
+        .EmployeeWizardProfile[hidden] { display:none; }
+        .EmployeeWizardProfile #employeeAvatarPreview, .EmployeeWizardProfile .AvatarPreview { width:52px !important; height:52px !important; min-width:52px; border-radius:50% !important; object-fit:cover; overflow:hidden; }
+        .EmployeeWizardProfile > div:last-child { min-width:0; display:flex; flex-direction:column; gap:2px; }
+        .EmployeeWizardProfile strong { font-size:14px; overflow:hidden; text-overflow:ellipsis; }
+        .EmployeeWizardProfile span { font-size:11px; color:rgba(0,0,0,.48); }
+        @media(max-width:768px) { .EmployeeWizardModal { width:calc(100vw - 24px); } .EmployeeWizardStep { min-height:145px; } }
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -4031,58 +4050,39 @@
 
     <!-- Add/Edit Employee Modal -->
     <div class="ModalOverlay" id="addEmployeeModal" onclick="if(event.target===this)closeModal('addEmployee')">
-        <div class="ModalContent">
+        <div class="ModalContent EmployeeWizardModal">
             <div class="ModalTitle">
                 <span id="employeeModalTitle">Add Employee</span>
-                <button class="ModalClose" onclick="closeModal('addEmployee')">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
+                <button class="ModalClose" onclick="closeModal('addEmployee')"><span class="material-symbols-outlined">close</span></button>
             </div>
-            <div id="employeeAvatarPreview" class="AvatarPreviewPlaceholder" onclick="document.getElementById('employeeAvatarFile').click()" style="cursor:pointer;">
-                <span class="material-symbols-outlined" style="font-size: 32px;">add_a_photo</span>
+            <div class="EmployeeWizardProgress" id="employeeWizardProgress">
+                <span class="active">1</span><i></i><span>2</span><i></i><span>3</span>
             </div>
-            <div class="form-group">
-                <label>Profile Picture URL</label>
-                <div class="InputRow">
-                    <div class="form-group" style="flex: 1;">
-                        <input type="text" id="employeeAvatarUrl" placeholder="Paste image URL..." oninput="previewEmployeeAvatar()">
-                    </div>
-                    <button class="GTextBtn" onclick="document.getElementById('employeeAvatarFile').click()" style="height: 38px; align-self: flex-end;">
-                        <span class="material-symbols-outlined" style="font-size: 16px;">upload_file</span>
-                    </button>
-                    <input type="file" id="employeeAvatarFile" accept="image/*" style="display:none;" onchange="handleEmployeeAvatarFile(event)">
+            <section class="EmployeeWizardStep active" data-employee-step="1">
+                <div class="EmployeeWizardHeading">Choose a business</div>
+                <div class="form-group"><label>Business</label><select id="employeeBusinessSelect"><option value="">Select a business…</option></select></div>
+            </section>
+            <section class="EmployeeWizardStep" data-employee-step="2">
+                <div class="EmployeeWizardHeading">Choose a job title</div>
+                <div class="form-group"><label>Job Title</label><select id="employeeJobSelect"><option value="">Select a job title…</option></select></div>
+            </section>
+            <section class="EmployeeWizardStep" data-employee-step="3">
+                <div class="EmployeeWizardHeading">Find the employee</div>
+                <div class="form-group"><label>Roblox username</label><input type="text" id="employeeUsername" placeholder="Start typing a Roblox username…" autocomplete="off"></div>
+                <div class="EmployeeWizardProfile" id="employeeWizardProfile" hidden>
+                    <div id="employeeAvatarPreview" class="AvatarPreviewPlaceholder"><span class="material-symbols-outlined" style="font-size:32px;">person</span></div>
+                    <div><strong id="employeeWizardDisplayName"></strong><span id="employeeWizardUsername"></span></div>
                 </div>
-            </div>
-            <div class="InputRow">
-                <div class="form-group" style="flex: 1;">
-                    <label>Display Name</label>
-                    <input type="text" id="employeeName" placeholder="e.g. John Smith">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Username</label>
-                    <input type="text" id="employeeUsername" placeholder="e.g. JohnSmith123">
-                </div>
-            </div>
-            <div class="InputRow">
-                <div class="form-group" style="flex: 1;">
-                    <label>Job Title</label>
-                    <select id="employeeJobSelect">
-                        <option value="">— None —</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Business</label>
-                    <select id="employeeBusinessSelect">
-                        <option value="">— None —</option>
-                    </select>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="GTextBtn" onclick="closeModal('addEmployee')">Cancel</button>
-                <button class="GTextBtn primary" onclick="saveEmployee()">
-                    <span class="material-symbols-outlined">check</span>
-                    Save
-                </button>
+            </section>
+            <input type="hidden" id="employeeAvatarUrl">
+            <input type="hidden" id="employeeName">
+            <input type="file" id="employeeAvatarFile" accept="image/*" hidden>
+            <div class="EmployeeWizardActions">
+                <button class="GTextBtn" id="employeeWizardBack" type="button" onclick="employeeWizardBack()" hidden>Back</button>
+                <span></span>
+                <button class="GTextBtn" type="button" onclick="closeModal('addEmployee')">Cancel</button>
+                <button class="GTextBtn primary" id="employeeWizardNext" type="button" onclick="employeeWizardNext()">Next</button>
+                <button class="GTextBtn primary" id="employeeWizardSave" type="button" onclick="saveEmployee()" hidden><span class="material-symbols-outlined">check</span>Add Staff</button>
             </div>
         </div>
     </div>
@@ -7672,11 +7672,17 @@
         let editingEmployeeIndex = -1;
         let staffFilterBusinessId = null;
 
+        let employeeWizardStep = 1;
+
         window.TechtobyAccount?.bindRobloxAutocomplete(document.getElementById('employeeUsername'), profile => {
             document.getElementById('employeeUsername').value = profile.username || '';
             document.getElementById('employeeName').value = profile.displayName || profile.username || '';
             document.getElementById('employeeAvatarUrl').value = profile.pfp || '';
+            document.getElementById('employeeWizardDisplayName').textContent = profile.displayName || profile.username || '';
+            document.getElementById('employeeWizardUsername').textContent = '@' + (profile.username || '');
+            document.getElementById('employeeWizardProfile').hidden = false;
             previewEmployeeAvatar();
+            document.getElementById('employeeWizardSave').disabled = false;
         });
 
         function loadEmployees() {
@@ -7687,24 +7693,63 @@
             localStorage.setItem('bbBusinessEmployees', JSON.stringify(employees));
         }
 
-        function openAddEmployeeModal(index) {
-            editingEmployeeIndex = index !== undefined ? index : -1;
-            document.getElementById('employeeModalTitle').textContent = editingEmployeeIndex >= 0 ? 'Edit Employee' : 'Add Employee';
-
-            // Populate job title dropdown (only enabled jobs)
+        function populateEmployeeJobsForBusiness(businessId, selectedJobIndex) {
             const jobSel = document.getElementById('employeeJobSelect');
-            jobSel.innerHTML = '<option value="">— None —</option>';
-            jobTitles.forEach((job, i) => {
+            jobSel.innerHTML = '<option value="">Select a job title…</option>';
+            const businessJobs = jobsByBusiness[String(businessId)] || jobsByBusiness[businessId] || [];
+            businessJobs.forEach((job, i) => {
                 if (job.disabled) return;
                 const opt = document.createElement('option');
                 opt.value = i;
                 opt.textContent = job.title;
                 jobSel.appendChild(opt);
             });
+            if (selectedJobIndex !== null && selectedJobIndex !== undefined) jobSel.value = String(selectedJobIndex);
+        }
 
-            // Populate business label dropdown
+        function setEmployeeWizardStep(step) {
+            employeeWizardStep = Math.max(1, Math.min(3, step));
+            document.querySelectorAll('.EmployeeWizardStep').forEach(el => el.classList.toggle('active', Number(el.dataset.employeeStep) === employeeWizardStep));
+            const dots = document.querySelectorAll('#employeeWizardProgress span');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i + 1 === employeeWizardStep);
+                dot.classList.toggle('done', i + 1 < employeeWizardStep);
+            });
+            document.getElementById('employeeWizardBack').hidden = employeeWizardStep === 1;
+            document.getElementById('employeeWizardNext').hidden = employeeWizardStep === 3;
+            document.getElementById('employeeWizardSave').hidden = employeeWizardStep !== 3;
+            if (employeeWizardStep === 3) {
+                document.getElementById('employeeWizardSave').disabled = !document.getElementById('employeeUsername').dataset.robloxUserId;
+                setTimeout(() => document.getElementById('employeeUsername').focus(), 50);
+            }
+        }
+
+        function employeeWizardNext() {
+            if (employeeWizardStep === 1) {
+                const businessId = document.getElementById('employeeBusinessSelect').value;
+                if (!businessId) { document.getElementById('employeeBusinessSelect').focus(); return; }
+                populateEmployeeJobsForBusiness(businessId);
+                setEmployeeWizardStep(2);
+                return;
+            }
+            if (employeeWizardStep === 2) {
+                if (document.getElementById('employeeJobSelect').value === '') { document.getElementById('employeeJobSelect').focus(); return; }
+                setEmployeeWizardStep(3);
+            }
+        }
+
+        function employeeWizardBack() {
+            setEmployeeWizardStep(employeeWizardStep - 1);
+        }
+
+        function openAddEmployeeModal(index) {
+            editingEmployeeIndex = index !== undefined ? index : -1;
+            const editing = editingEmployeeIndex >= 0;
+            document.getElementById('employeeModalTitle').textContent = editing ? 'Edit Employee' : 'Add Staff';
+            document.getElementById('employeeWizardSave').innerHTML = '<span class="material-symbols-outlined">check</span>' + (editing ? 'Save' : 'Add Staff');
+
             const bizSel = document.getElementById('employeeBusinessSelect');
-            bizSel.innerHTML = '<option value="">— None —</option>';
+            bizSel.innerHTML = '<option value="">Select a business…</option>';
             businessLabels.forEach(bl => {
                 const opt = document.createElement('option');
                 opt.value = bl.id;
@@ -7712,26 +7757,31 @@
                 bizSel.appendChild(opt);
             });
 
-            // Fill form if editing
-            if (editingEmployeeIndex >= 0) {
+            const username = document.getElementById('employeeUsername');
+            document.getElementById('employeeAvatarUrl').value = '';
+            document.getElementById('employeeName').value = '';
+            username.value = '';
+            delete username.dataset.robloxUserId;
+            document.getElementById('employeeWizardProfile').hidden = true;
+            resetEmployeeAvatarPreview();
+
+            if (editing) {
                 const emp = employees[editingEmployeeIndex];
+                bizSel.value = emp.businessLabelId ?? '';
+                populateEmployeeJobsForBusiness(emp.businessLabelId, emp.jobIndex);
                 document.getElementById('employeeAvatarUrl').value = emp.avatarUrl || '';
                 document.getElementById('employeeName').value = emp.name || '';
-                document.getElementById('employeeUsername').value = emp.username || '';
-                document.getElementById('employeeUsername').dataset.robloxUserId = emp.robloxId || '';
-                if (emp.jobIndex !== null && emp.jobIndex !== undefined && emp.jobIndex < jobTitles.length) {
-                    jobSel.value = emp.jobIndex;
-                }
-                if (emp.businessLabelId) bizSel.value = emp.businessLabelId;
+                username.value = emp.username || '';
+                username.dataset.robloxUserId = emp.robloxId || '';
+                document.getElementById('employeeWizardDisplayName').textContent = emp.name || emp.username || '';
+                document.getElementById('employeeWizardUsername').textContent = emp.username ? '@' + emp.username : '';
+                document.getElementById('employeeWizardProfile').hidden = false;
                 previewEmployeeAvatar();
             } else {
-                document.getElementById('employeeAvatarUrl').value = '';
-                document.getElementById('employeeName').value = '';
-                document.getElementById('employeeUsername').value = '';
-                delete document.getElementById('employeeUsername').dataset.robloxUserId;
-                resetEmployeeAvatarPreview();
+                document.getElementById('employeeJobSelect').innerHTML = '<option value="">Select a job title…</option>';
             }
 
+            setEmployeeWizardStep(1);
             openModal('addEmployee');
         }
 
@@ -7786,15 +7836,18 @@
         function saveEmployee() {
             const name = document.getElementById('employeeName').value.trim();
             const username = document.getElementById('employeeUsername').value.trim();
-            if (!name && !username) {
-                document.getElementById('employeeName').focus();
+            if (!document.getElementById('employeeBusinessSelect').value) { setEmployeeWizardStep(1); return; }
+            if (document.getElementById('employeeJobSelect').value === '') { setEmployeeWizardStep(2); return; }
+            if (!username || !document.getElementById('employeeUsername').dataset.robloxUserId) {
+                setEmployeeWizardStep(3);
+                document.getElementById('employeeUsername').focus();
                 return;
             }
             const avatarUrl = document.getElementById('employeeAvatarUrl').value.trim();
             const jobVal = document.getElementById('employeeJobSelect').value;
             const jobIndex = jobVal !== '' ? parseInt(jobVal) : null;
             const bizVal = document.getElementById('employeeBusinessSelect').value;
-            const businessLabelId = bizVal !== '' ? parseInt(bizVal) : null;
+            const businessLabelId = bizVal !== '' ? bizVal : null;
 
             const emp = {
                 id: editingEmployeeIndex >= 0 ? employees[editingEmployeeIndex].id : Date.now(),
