@@ -4656,7 +4656,7 @@
             'bbBusinessPermissions','bbSalaryMode','bbBusinessJobs','bbBudget','bbHoursPerDay','bbDays',
             'bbPermLabels','bbRoleLabels','bbCustomRanges','bbBusinessPresets','bbBusinessLabels',
             'bbBusinessEmployees','bbWorkdayRecords','bbFinanceRecords','bbPartnerships',
-            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones','bbBusinessJobTombstones'
+            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones','bbBusinessJobTombstones','bbBusinessEmployeeTombstones'
         ];
 
         // The account owns personal data; shared business sessions remain separate.
@@ -5527,6 +5527,42 @@
             try { return JSON.parse(value); } catch (e) { return fallback; }
         }
 
+        function createEmployeeSyncId() {
+            return 'staff-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        }
+
+        function getLegacyEmployeeSyncId(employee, index) {
+            if (employee && employee.id !== undefined && employee.id !== null) return 'staff-' + String(employee.id);
+            return 'staff-legacy-' + simpleHash([
+                String(index),
+                employee?.robloxId || '',
+                employee?.username || '',
+                employee?.name || ''
+            ].join('|'));
+        }
+
+        function normalizeEmployeeSyncData(employee, index, jobsMap) {
+            if (!employee) return employee;
+            const normalized = { ...employee };
+            if (!normalized._syncId) normalized._syncId = getLegacyEmployeeSyncId(normalized, index);
+            if (!normalized._updatedAt) normalized._updatedAt = 1;
+
+            const businessId = normalized.businessLabelId !== undefined && normalized.businessLabelId !== null
+                ? String(normalized.businessLabelId)
+                : '';
+            const businessJobs = businessId ? (jobsMap?.[businessId] || jobsMap?.[normalized.businessLabelId] || []) : [];
+
+            if (normalized.jobSyncId) {
+                const resolvedIndex = businessJobs.findIndex(job => String(job?._syncId || '') === String(normalized.jobSyncId));
+                if (resolvedIndex >= 0) normalized.jobIndex = resolvedIndex;
+            } else if (normalized.jobIndex !== null && normalized.jobIndex !== undefined && businessJobs[normalized.jobIndex]) {
+                const job = businessJobs[normalized.jobIndex];
+                if (job._syncId) normalized.jobSyncId = job._syncId;
+            }
+
+            return normalized;
+        }
+
         function mergeBusinessSyncData(primaryData, secondaryData) {
             const merged = { ...primaryData };
             const primaryBusinesses = parseSyncJson(primaryData.bbBusinessLabels, []);
@@ -5620,10 +5656,64 @@
                 }
             });
 
+            const secondaryEmployees = parseSyncJson(secondaryData.bbBusinessEmployees, []);
+            const primaryEmployees = parseSyncJson(primaryData.bbBusinessEmployees, []);
+            const secondaryEmployeeDeletes = parseSyncJson(secondaryData.bbBusinessEmployeeTombstones, {});
+            const primaryEmployeeDeletes = parseSyncJson(primaryData.bbBusinessEmployeeTombstones, {});
+            const mergedEmployeeDeletes = { ...secondaryEmployeeDeletes };
+
+            Object.entries(primaryEmployeeDeletes).forEach(([employeeId, ts]) => {
+                mergedEmployeeDeletes[employeeId] = Math.max(Number(mergedEmployeeDeletes[employeeId]) || 0, Number(ts) || 0);
+            });
+
+            const employeesById = new Map();
+            const addEmployee = (employee, index, preferOnTie) => {
+                if (!employee) return;
+                const normalized = normalizeEmployeeSyncData(employee, index, mergedJobs);
+                const id = String(normalized._syncId);
+                const current = employeesById.get(id);
+                if (!current) {
+                    employeesById.set(id, normalized);
+                    return;
+                }
+                const currentTs = Number(current._updatedAt) || 0;
+                const incomingTs = Number(normalized._updatedAt) || 0;
+                if (incomingTs > currentTs || (incomingTs === currentTs && preferOnTie)) employeesById.set(id, normalized);
+            };
+
+            secondaryEmployees.forEach((employee, index) => addEmployee(employee, index, false));
+            primaryEmployees.forEach((employee, index) => addEmployee(employee, index, true));
+
+            const mergedEmployees = [];
+            employeesById.forEach((employee, employeeId) => {
+                const deletedAt = Number(mergedEmployeeDeletes[employeeId]) || 0;
+                const updatedAt = Number(employee._updatedAt) || 0;
+                if (deletedAt && updatedAt <= deletedAt) return;
+
+                const businessId = employee.businessLabelId !== undefined && employee.businessLabelId !== null
+                    ? String(employee.businessLabelId)
+                    : '';
+                if (businessId && !businesses.some(business => String(business.id) === businessId)) {
+                    employee.businessLabelId = null;
+                    employee.jobIndex = null;
+                    employee.jobSyncId = null;
+                } else {
+                    const businessJobs = businessId ? (mergedJobs[businessId] || []) : [];
+                    if (employee.jobSyncId) {
+                        const resolvedIndex = businessJobs.findIndex(job => String(job?._syncId || '') === String(employee.jobSyncId));
+                        employee.jobIndex = resolvedIndex >= 0 ? resolvedIndex : null;
+                    }
+                }
+
+                mergedEmployees.push(employee);
+            });
+
             merged.bbBusinessLabels = JSON.stringify(businesses);
             merged.bbBusinessTombstones = JSON.stringify(tombstones);
             merged.bbBusinessJobsByBusiness = JSON.stringify(mergedJobs);
             merged.bbBusinessJobTombstones = JSON.stringify(mergedJobDeletes);
+            merged.bbBusinessEmployees = JSON.stringify(mergedEmployees);
+            merged.bbBusinessEmployeeTombstones = JSON.stringify(mergedEmployeeDeletes);
             return merged;
         }
 
@@ -5639,6 +5729,7 @@
         function refreshBusinessSyncViews() {
             loadBusinessLabels();
             loadBusinessJobs();
+            loadEmployees();
             if (typeof renderBusinessDetailGrid === 'function') renderBusinessDetailGrid();
             if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
             if (typeof renderStaffGrid === 'function') renderStaffGrid();
@@ -5668,7 +5759,7 @@
                 }
 
                 // Keep this client on the same merged business list immediately.
-                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness','bbBusinessJobTombstones'].forEach(key => {
+                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness','bbBusinessJobTombstones','bbBusinessEmployees','bbBusinessEmployeeTombstones'].forEach(key => {
                     if (data[key] !== undefined) localStorage.setItem(key, data[key]);
                 });
                 refreshBusinessSyncViews();
@@ -7519,7 +7610,13 @@
             tombstones[String(id)] = Date.now();
             localStorage.setItem('bbBusinessTombstones', JSON.stringify(tombstones));
             businessLabels = businessLabels.filter(label => String(label.id) !== String(id));
-            employees.forEach(emp => { if (String(emp.businessLabelId) === String(id)) emp.businessLabelId = null; });
+            employees.forEach(emp => {
+                if (String(emp.businessLabelId) !== String(id)) return;
+                emp.businessLabelId = null;
+                emp.jobIndex = null;
+                emp.jobSyncId = null;
+                emp._updatedAt = Date.now();
+            });
             if (typeof jobsByBusiness !== 'undefined') delete jobsByBusiness[String(id)];
             if (typeof financeRecords !== 'undefined') financeRecords = financeRecords.filter(record => String(record.businessId) !== String(id));
             saveEmployees(); saveBusinessLabels();
@@ -7825,11 +7922,32 @@
         });
 
         function loadEmployees() {
-            employees = JSON.parse(localStorage.getItem('bbBusinessEmployees') || '[]');
+            try {
+                const saved = JSON.parse(localStorage.getItem('bbBusinessEmployees') || '[]');
+                employees = Array.isArray(saved)
+                    ? saved.map((employee, index) => normalizeEmployeeSyncData(employee, index, jobsByBusiness))
+                    : [];
+            } catch (error) {
+                employees = [];
+            }
         }
 
         function saveEmployees() {
+            employees = employees.map((employee, index) => normalizeEmployeeSyncData(employee, index, jobsByBusiness));
             localStorage.setItem('bbBusinessEmployees', JSON.stringify(employees));
+        }
+
+        function recordEmployeeDeletion(employee) {
+            if (!employee) return;
+            const normalized = normalizeEmployeeSyncData(employee, employees.indexOf(employee), jobsByBusiness);
+            const tombstones = parseSyncJson(localStorage.getItem('bbBusinessEmployeeTombstones'), {});
+            tombstones[String(normalized._syncId)] = Date.now();
+            localStorage.setItem('bbBusinessEmployeeTombstones', JSON.stringify(tombstones));
+        }
+
+        function syncEmployeeChangesNow() {
+            if (typeof saveCurrentDataToProfile === 'function') saveCurrentDataToProfile();
+            if (isSharedProfile() && typeof pushToCloud === 'function') pushToCloud();
         }
 
         function populateEmployeeJobsForBusiness(businessId, selectedJobIndex) {
@@ -7988,13 +8106,21 @@
             const bizVal = document.getElementById('employeeBusinessSelect').value;
             const businessLabelId = bizVal !== '' ? bizVal : null;
 
+            const existingEmployee = editingEmployeeIndex >= 0 ? employees[editingEmployeeIndex] : null;
+            const businessJobs = jobsByBusiness[String(businessLabelId)] || jobsByBusiness[businessLabelId] || [];
+            const selectedJob = jobIndex !== null ? businessJobs[jobIndex] : null;
+            if (selectedJob) ensureJobSyncMetadata(selectedJob, businessLabelId, jobIndex);
+
             const emp = {
-                id: editingEmployeeIndex >= 0 ? employees[editingEmployeeIndex].id : Date.now(),
+                id: existingEmployee ? existingEmployee.id : Date.now(),
+                _syncId: existingEmployee?._syncId || createEmployeeSyncId(),
+                _updatedAt: Date.now(),
                 name,
                 username,
                 robloxId: document.getElementById('employeeUsername').dataset.robloxUserId || null,
                 avatarUrl,
                 jobIndex,
+                jobSyncId: selectedJob?._syncId || null,
                 businessLabelId
             };
 
@@ -8008,13 +8134,18 @@
             closeModal('addEmployee');
             renderStaffGrid();
             recalcWages();
+            syncEmployeeChangesNow();
         }
 
         function removeEmployee(index) {
+            const employee = employees[index];
+            if (!employee) return;
+            recordEmployeeDeletion(employee);
             employees.splice(index, 1);
             saveEmployees();
             renderStaffGrid();
             recalcWages();
+            syncEmployeeChangesNow();
         }
 
         function renderStaffBusinessFilter() {
@@ -8030,7 +8161,7 @@
 
             businessLabels.forEach(bl => {
                 const btn = document.createElement('button');
-                btn.className = 'BusinessLabelFilterBtn' + (staffFilterBusinessId === bl.id ? ' active' : '');
+                btn.className = 'BusinessLabelFilterBtn' + (staffFilterBusinessId !== null && String(staffFilterBusinessId) === String(bl.id) ? ' active' : '');
                 const dot = document.createElement('span');
                 dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' + bl.color + ';';
                 btn.appendChild(dot);
@@ -8047,7 +8178,7 @@
 
             // Filter employees
             const filtered = staffFilterBusinessId !== null
-                ? employees.filter(emp => emp.businessLabelId === staffFilterBusinessId)
+                ? employees.filter(emp => String(emp.businessLabelId) === String(staffFilterBusinessId))
                 : employees;
 
             filtered.forEach((emp, filteredIdx) => {
@@ -8108,8 +8239,16 @@
                 }
 
                 // Job title + salary
-                if (emp.jobIndex !== null && emp.jobIndex !== undefined && emp.jobIndex < jobTitles.length) {
-                    const job = jobTitles[emp.jobIndex];
+                const employeeBusinessJobs = emp.businessLabelId !== null && emp.businessLabelId !== undefined
+                    ? (jobsByBusiness[String(emp.businessLabelId)] || jobsByBusiness[emp.businessLabelId] || [])
+                    : [];
+                let employeeJobIndex = emp.jobIndex;
+                if (emp.jobSyncId) {
+                    const resolvedIndex = employeeBusinessJobs.findIndex(job => String(job?._syncId || '') === String(emp.jobSyncId));
+                    if (resolvedIndex >= 0) employeeJobIndex = resolvedIndex;
+                }
+                if (employeeJobIndex !== null && employeeJobIndex !== undefined && employeeBusinessJobs[employeeJobIndex]) {
+                    const job = employeeBusinessJobs[employeeJobIndex];
                     const jobEl = document.createElement('div');
                     jobEl.className = 'StaffJob';
                     jobEl.textContent = job.title;
@@ -8133,7 +8272,7 @@
 
                 // Business label
                 if (emp.businessLabelId) {
-                    const bl = businessLabels.find(b => b.id === emp.businessLabelId);
+                    const bl = businessLabels.find(b => String(b.id) === String(emp.businessLabelId));
                     if (bl) {
                         const pill = document.createElement('span');
                         pill.className = 'BusinessLabelPill';
