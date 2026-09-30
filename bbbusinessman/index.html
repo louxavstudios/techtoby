@@ -4656,7 +4656,7 @@
             'bbBusinessPermissions','bbSalaryMode','bbBusinessJobs','bbBudget','bbHoursPerDay','bbDays',
             'bbPermLabels','bbRoleLabels','bbCustomRanges','bbBusinessPresets','bbBusinessLabels',
             'bbBusinessEmployees','bbWorkdayRecords','bbFinanceRecords','bbPartnerships',
-            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness'
+            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones'
         ];
 
         // The account owns personal data; shared business sessions remain separate.
@@ -5522,17 +5522,106 @@
             syncDebounceTimer = setTimeout(() => pushToCloud(), 2000);
         }
 
+        function parseSyncJson(value, fallback) {
+            if (value === undefined || value === null || value === '') return fallback;
+            try { return JSON.parse(value); } catch (e) { return fallback; }
+        }
+
+        function mergeBusinessSyncData(primaryData, secondaryData) {
+            const merged = { ...primaryData };
+            const primaryBusinesses = parseSyncJson(primaryData.bbBusinessLabels, []);
+            const secondaryBusinesses = parseSyncJson(secondaryData.bbBusinessLabels, []);
+            const primaryTombstones = parseSyncJson(primaryData.bbBusinessTombstones, {});
+            const secondaryTombstones = parseSyncJson(secondaryData.bbBusinessTombstones, {});
+            const tombstones = { ...secondaryTombstones };
+
+            Object.entries(primaryTombstones).forEach(([id, ts]) => {
+                tombstones[id] = Math.max(Number(tombstones[id]) || 0, Number(ts) || 0);
+            });
+
+            const businessesById = new Map();
+            const addBusiness = (business, preferOnTie) => {
+                if (!business || business.id === undefined || business.id === null || business._draft) return;
+                const id = String(business.id);
+                const current = businessesById.get(id);
+                if (!current) {
+                    businessesById.set(id, business);
+                    return;
+                }
+                const currentTs = Number(current._updatedAt) || 0;
+                const incomingTs = Number(business._updatedAt) || 0;
+                if (incomingTs > currentTs || (incomingTs === currentTs && preferOnTie)) businessesById.set(id, business);
+            };
+
+            secondaryBusinesses.forEach(business => addBusiness(business, false));
+            primaryBusinesses.forEach(business => addBusiness(business, true));
+
+            const businesses = [];
+            businessesById.forEach((business, id) => {
+                const deletedAt = Number(tombstones[id]) || 0;
+                const updatedAt = Number(business._updatedAt) || 0;
+                if (!deletedAt || updatedAt > deletedAt) businesses.push(business);
+            });
+
+            const secondaryJobs = parseSyncJson(secondaryData.bbBusinessJobsByBusiness, {});
+            const primaryJobs = parseSyncJson(primaryData.bbBusinessJobsByBusiness, {});
+            const mergedJobs = { ...secondaryJobs, ...primaryJobs };
+            Object.keys(mergedJobs).forEach(id => {
+                if (tombstones[id] && !businesses.some(business => String(business.id) === String(id))) delete mergedJobs[id];
+            });
+
+            merged.bbBusinessLabels = JSON.stringify(businesses);
+            merged.bbBusinessTombstones = JSON.stringify(tombstones);
+            merged.bbBusinessJobsByBusiness = JSON.stringify(mergedJobs);
+            return merged;
+        }
+
+        function getCurrentProfileSnapshot() {
+            const data = {};
+            PROFILE_DATA_KEYS.forEach(key => {
+                const val = localStorage.getItem(key);
+                if (val !== null) data[key] = val;
+            });
+            return data;
+        }
+
+        function refreshBusinessSyncViews() {
+            loadBusinessLabels();
+            loadBusinessJobs();
+            if (typeof renderBusinessDetailGrid === 'function') renderBusinessDetailGrid();
+            if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
+            if (typeof renderStaffGrid === 'function') renderStaffGrid();
+            if (typeof renderSimpleFinanceGrid === 'function') renderSimpleFinanceGrid();
+        }
+
         async function pushToCloud() {
             const profile = getActiveProfile();
             if (!profile || profile.type !== 'shared' || !profile.sessionId) return;
 
             setSyncStatus('syncing');
             try {
-                const data = {};
-                PROFILE_DATA_KEYS.forEach(key => {
-                    const val = localStorage.getItem(key);
-                    if (val !== null) data[key] = val;
+                let data = getCurrentProfileSnapshot();
+
+                // Read the latest cloud snapshot first. This makes independently-created
+                // businesses from multiple collaborators converge instead of one whole
+                // snapshot replacing another.
+                const remoteResp = await apiFetch(`${API_BASE}/db?${DB_PARAMS}&key=${profile.sessionId}`);
+                const remoteSession = await remoteResp.json();
+                if (remoteSession && remoteSession.data) {
+                    try {
+                        const remoteData = JSON.parse(decodeURIComponent(escape(atob(remoteSession.data))));
+                        data = mergeBusinessSyncData(data, remoteData);
+                    } catch (e) {
+                        console.warn('Could not merge remote business data before push:', e);
+                    }
+                }
+
+                // Keep this client on the same merged business list immediately.
+                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness'].forEach(key => {
+                    if (data[key] !== undefined) localStorage.setItem(key, data[key]);
                 });
+                refreshBusinessSyncViews();
+
                 const compressed = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
                 const hash = simpleHash(compressed);
 
@@ -5547,6 +5636,7 @@
                     body: JSON.stringify({ data: compressed })
                 });
 
+                localStorage.setItem('bbProfileData_' + profile.id, JSON.stringify(data));
                 lastSyncHash = hash;
                 setSyncStatus('synced');
             } catch (err) {
@@ -5590,7 +5680,7 @@
                             handleMemoryUpdate(mem);
                         } catch (e) {}
                     }
-                    return;
+                    return false;
                 }
 
                 const hash = simpleHash(session.data);
@@ -5607,8 +5697,13 @@
                     return;
                 }
 
-                // Decode cloud data
-                const decoded = JSON.parse(decodeURIComponent(escape(atob(session.data))));
+                // Decode cloud data and merge business records from both sides.
+                // This prevents concurrent additions from disappearing when collaborators
+                // save within the same sync window.
+                const remoteDecoded = JSON.parse(decodeURIComponent(escape(atob(session.data))));
+                const localSnapshot = getCurrentProfileSnapshot();
+                const decoded = mergeBusinessSyncData(remoteDecoded, localSnapshot);
+                const mergedCompressed = btoa(unescape(encodeURIComponent(JSON.stringify(decoded))));
 
                 // Apply to localStorage
                 PROFILE_DATA_KEYS.forEach(key => {
@@ -5619,12 +5714,15 @@
                     }
                 });
 
-                // Save locally
+                // Save locally. Keep the cloud hash when the merged copy contains local
+                // additions so the normal debounced push will publish the union.
                 localStorage.setItem('bbProfileData_' + profile.id, JSON.stringify(decoded));
-                lastSyncHash = hash;
+                lastSyncHash = mergedCompressed === session.data ? hash : '';
 
                 // Reload UI without full page reset
                 reloadAllData();
+
+                if (mergedCompressed !== session.data) debouncedCloudSync();
 
                 // Parse memory for presence
                 if (session.memory) {
@@ -5637,6 +5735,7 @@
                 // Track total session members for collaborator count
                 const totalCollabs = session.collaborators ? session.collaborators.split(',').filter(Boolean).length : 0;
                 lastSessionMemberCount = 1 + totalCollabs; // owner + collaborators
+                return true;
             } catch (err) {
                 console.error('Pull sync error:', err);
                 setSyncStatus('offline');
@@ -5656,8 +5755,11 @@
             // Send presence every 5 seconds
             presenceInterval = setInterval(() => sendPresence(), 5000);
 
-            // Initial push
-            pushToCloud();
+            // Pull first so reopening/joining a shared session can never overwrite
+            // collaborators with an older local snapshot. Only seed a truly empty session.
+            pullFromCloud().then(hasRemoteData => {
+                if (hasRemoteData === false) pushToCloud();
+            });
         }
 
         function stopSync() {
@@ -7350,6 +7452,9 @@
         function removeBusinessLabel(id) {
             const biz = businessLabels.find(label => String(label.id) === String(id));
             if (!biz || !confirm('Delete "' + (biz.name || 'this business') + '"? Staff assigned to it will become unassigned.')) return;
+            const tombstones = parseSyncJson(localStorage.getItem('bbBusinessTombstones'), {});
+            tombstones[String(id)] = Date.now();
+            localStorage.setItem('bbBusinessTombstones', JSON.stringify(tombstones));
             businessLabels = businessLabels.filter(label => String(label.id) !== String(id));
             employees.forEach(emp => { if (String(emp.businessLabelId) === String(id)) emp.businessLabelId = null; });
             if (typeof jobsByBusiness !== 'undefined') delete jobsByBusiness[String(id)];
@@ -7367,6 +7472,7 @@
             const label = businessLabels.find(l => l.id === id);
             if (label) {
                 label[field] = value;
+                label._updatedAt = Date.now();
                 saveBusinessLabels();
                 renderStaffGrid();
             }
@@ -7621,6 +7727,7 @@
             biz.color = document.getElementById('businessColorInput').value;
             biz.description = document.getElementById('businessDescInput').value.trim();
             biz.type = document.getElementById('businessTypeInput').value.trim();
+            biz._updatedAt = Date.now();
             delete biz._draft;
             saveBusinessLabels();
             renderBusinessDetailGrid();
