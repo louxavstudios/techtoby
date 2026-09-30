@@ -4656,7 +4656,7 @@
             'bbBusinessPermissions','bbSalaryMode','bbBusinessJobs','bbBudget','bbHoursPerDay','bbDays',
             'bbPermLabels','bbRoleLabels','bbCustomRanges','bbBusinessPresets','bbBusinessLabels',
             'bbBusinessEmployees','bbWorkdayRecords','bbFinanceRecords','bbPartnerships',
-            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards'
+            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness'
         ];
 
         // The account owns personal data; shared business sessions remain separate.
@@ -4793,6 +4793,9 @@
             loadInventoryItems();
             loadOrders();
             renderLevelDropdown();
+            if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
+            if (typeof renderBusinessDetailGrid === 'function') renderBusinessDetailGrid();
+            if (typeof renderStaffGrid === 'function') renderStaffGrid();
 
             const savedBudget = localStorage.getItem('bbBudget');
             if (savedBudget !== null) document.getElementById('budgetInput').value = savedBudget;
@@ -6004,6 +6007,7 @@
             if (labelsBtn) labelsBtn.style.display = pageId === 'permissions' ? '' : 'none';
 
             // Refresh views when switching
+            if (pageId === 'salary' && typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
             if (pageId === 'staff') renderStaffGrid();
             if (pageId === 'hours') renderHoursRecordGrid();
             if (pageId === 'finance') renderFinanceRecordGrid();
@@ -7330,6 +7334,7 @@
 
         function loadBusinessLabels() {
             businessLabels = JSON.parse(localStorage.getItem('bbBusinessLabels') || '[]');
+            businessLabels.forEach(biz => { if (biz && biz._draft) delete biz._draft; });
         }
 
         function saveBusinessLabels() {
@@ -7337,11 +7342,9 @@
         }
 
         function addBusinessLabel() {
-            businessLabels.push({ id: Date.now(), name: 'New Business', color: '#6366f1', description: '', type: '' });
-            saveBusinessLabels();
+            businessLabels.push({ id: Date.now(), name: 'New Business', color: '#6366f1', description: '', type: '', _draft: true });
             renderBusinessDetailGrid();
             openBusinessEdit(businessLabels.length - 1);
-            if (typeof renderJobBusinessSelect === "function") renderJobBusinessSelect();
         }
 
         function removeBusinessLabel(id) {
@@ -7552,6 +7555,13 @@
             document.getElementById('businessOverviewStats').style.display = '';
             if (activeBusinessIdx >= 0) {
                 const biz = businessLabels[activeBusinessIdx];
+                if (biz && biz._draft) {
+                    businessLabels.splice(activeBusinessIdx, 1);
+                    activeBusinessIdx = -1;
+                    closeBusinessDetailView();
+                    renderBusinessDetailGrid();
+                    return;
+                }
                 document.getElementById('businessDetailViewTitle').textContent = biz ? biz.name : 'Business';
                 renderBusinessOverview(activeBusinessIdx);
             } else {
@@ -7611,8 +7621,14 @@
             biz.color = document.getElementById('businessColorInput').value;
             biz.description = document.getElementById('businessDescInput').value.trim();
             biz.type = document.getElementById('businessTypeInput').value.trim();
+            delete biz._draft;
             saveBusinessLabels();
+            renderBusinessDetailGrid();
             renderStaffGrid();
+            if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
+            if (typeof renderSimpleFinanceGrid === 'function') renderSimpleFinanceGrid();
+            if (typeof saveCurrentDataToProfile === 'function') saveCurrentDataToProfile();
+            if (isSharedProfile() && typeof pushToCloud === 'function') pushToCloud();
             closeBusinessEdit();
         }
 
