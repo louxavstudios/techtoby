@@ -4656,7 +4656,7 @@
             'bbBusinessPermissions','bbSalaryMode','bbBusinessJobs','bbBudget','bbHoursPerDay','bbDays',
             'bbPermLabels','bbRoleLabels','bbCustomRanges','bbBusinessPresets','bbBusinessLabels',
             'bbBusinessEmployees','bbWorkdayRecords','bbFinanceRecords','bbPartnerships',
-            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones'
+            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones','bbBusinessJobTombstones'
         ];
 
         // The account owns personal data; shared business sessions remain separate.
@@ -5565,14 +5565,65 @@
 
             const secondaryJobs = parseSyncJson(secondaryData.bbBusinessJobsByBusiness, {});
             const primaryJobs = parseSyncJson(primaryData.bbBusinessJobsByBusiness, {});
-            const mergedJobs = { ...secondaryJobs, ...primaryJobs };
+            const secondaryJobDeletes = parseSyncJson(secondaryData.bbBusinessJobTombstones, {});
+            const primaryJobDeletes = parseSyncJson(primaryData.bbBusinessJobTombstones, {});
+            const mergedJobDeletes = {};
+            const mergedJobs = {};
+
+            const businessIds = new Set([
+                ...Object.keys(secondaryJobs),
+                ...Object.keys(primaryJobs),
+                ...Object.keys(secondaryJobDeletes),
+                ...Object.keys(primaryJobDeletes)
+            ]);
+
+            businessIds.forEach(businessId => {
+                const deletes = { ...(secondaryJobDeletes[businessId] || {}) };
+                Object.entries(primaryJobDeletes[businessId] || {}).forEach(([jobId, ts]) => {
+                    deletes[jobId] = Math.max(Number(deletes[jobId]) || 0, Number(ts) || 0);
+                });
+                mergedJobDeletes[businessId] = deletes;
+
+                const byId = new Map();
+                const addJob = (job, index, preferOnTie) => {
+                    if (!job) return;
+                    const normalized = { ...job };
+                    if (!normalized._syncId) normalized._syncId = getLegacyJobSyncId(businessId, index, normalized);
+                    if (!normalized._updatedAt) normalized._updatedAt = 1;
+                    const id = String(normalized._syncId);
+                    const current = byId.get(id);
+                    if (!current) {
+                        byId.set(id, normalized);
+                        return;
+                    }
+                    const currentTs = Number(current._updatedAt) || 0;
+                    const incomingTs = Number(normalized._updatedAt) || 0;
+                    if (incomingTs > currentTs || (incomingTs === currentTs && preferOnTie)) byId.set(id, normalized);
+                };
+
+                (secondaryJobs[businessId] || []).forEach((job, index) => addJob(job, index, false));
+                (primaryJobs[businessId] || []).forEach((job, index) => addJob(job, index, true));
+
+                const jobs = [];
+                byId.forEach((job, jobId) => {
+                    const deletedAt = Number(deletes[jobId]) || 0;
+                    const updatedAt = Number(job._updatedAt) || 0;
+                    if (!deletedAt || updatedAt > deletedAt) jobs.push(job);
+                });
+                mergedJobs[businessId] = jobs;
+            });
+
             Object.keys(mergedJobs).forEach(id => {
-                if (tombstones[id] && !businesses.some(business => String(business.id) === String(id))) delete mergedJobs[id];
+                if (tombstones[id] && !businesses.some(business => String(business.id) === String(id))) {
+                    delete mergedJobs[id];
+                    delete mergedJobDeletes[id];
+                }
             });
 
             merged.bbBusinessLabels = JSON.stringify(businesses);
             merged.bbBusinessTombstones = JSON.stringify(tombstones);
             merged.bbBusinessJobsByBusiness = JSON.stringify(mergedJobs);
+            merged.bbBusinessJobTombstones = JSON.stringify(mergedJobDeletes);
             return merged;
         }
 
@@ -5617,7 +5668,7 @@
                 }
 
                 // Keep this client on the same merged business list immediately.
-                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness'].forEach(key => {
+                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness','bbBusinessJobTombstones'].forEach(key => {
                     if (data[key] !== undefined) localStorage.setItem(key, data[key]);
                 });
                 refreshBusinessSyncViews();
@@ -6338,7 +6389,7 @@
 
             if (currentSalaryMode === 'level') {
                 const level = parseInt(document.getElementById('jobLevelInput').value);
-                jobTitles.push({ title, level, fixedSalary: null, wage: null, count, hoursPerDay, disabled: false });
+                jobTitles.push({ title, level, fixedSalary: null, wage: null, count, hoursPerDay, disabled: false, _syncId: createJobSyncId(), _updatedAt: Date.now() });
                 document.getElementById('jobLevelInput').value = Object.keys(levelRanges).map(Number).sort((a,b) => a-b)[0];
             } else {
                 const fixed = parseFloat(document.getElementById('fixedSalaryInput').value);
@@ -6347,7 +6398,7 @@
                     return;
                 }
                 const level = parseInt(document.getElementById('jobLevelInput').value);
-                jobTitles.push({ title, level, fixedSalary: fixed, wage: fixed, count, hoursPerDay, disabled: false });
+                jobTitles.push({ title, level, fixedSalary: fixed, wage: fixed, count, hoursPerDay, disabled: false, _syncId: createJobSyncId(), _updatedAt: Date.now() });
                 document.getElementById('fixedSalaryInput').value = '';
             }
 
@@ -6359,24 +6410,32 @@
         }
 
         function removeJobTitle(index) {
+            const job = jobTitles[index];
+            recordJobDeletion(job);
             jobTitles.splice(index, 1);
             saveJobTitles();
             recalcWages();
+            syncJobChangesNow();
         }
 
         function duplicateJob(index) {
             const job = JSON.parse(JSON.stringify(jobTitles[index]));
             job.wage = null;
             job.payStatus = undefined;
+            job._syncId = createJobSyncId();
+            job._updatedAt = Date.now();
             jobTitles.splice(index + 1, 0, job);
             saveJobTitles();
             recalcWages();
+            syncJobChangesNow();
         }
 
         function clearAllJobs() {
+            jobTitles.forEach(job => recordJobDeletion(job));
             jobTitles = [];
             saveJobTitles();
             recalcWages();
+            syncJobChangesNow();
         }
 
         let editingJobIndex = -1;
@@ -6404,9 +6463,11 @@
                 if (v > 0) { jobTitles[index].fixedSalary = v; jobTitles[index].wage = v; }
             }
 
+            markJobChanged(jobTitles[index]);
             editingJobIndex = -1;
             saveJobTitles();
             recalcWages();
+            syncJobChangesNow();
         }
 
         function cancelEditJob() {
@@ -6416,8 +6477,10 @@
 
         function toggleJobDisabled(index) {
             jobTitles[index].disabled = !jobTitles[index].disabled;
+            markJobChanged(jobTitles[index]);
             saveJobTitles();
             recalcWages();
+            syncJobChangesNow();
         }
 
         function getJobEmployeeCounts() {
@@ -9763,6 +9826,50 @@
         let jobsByBusiness = {};
         let activeJobBusinessId = null;
 
+        function createJobSyncId() {
+            return 'job-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        }
+
+        function getLegacyJobSyncId(businessId, index, job) {
+            return 'legacy-' + simpleHash([
+                String(businessId || ''),
+                String(index),
+                job?.title || '',
+                job?.level ?? '',
+                job?.fixedSalary ?? '',
+                job?.count ?? '',
+                job?.hoursPerDay ?? ''
+            ].join('|'));
+        }
+
+        function ensureJobSyncMetadata(job, businessId, index) {
+            if (!job) return job;
+            if (!job._syncId) job._syncId = getLegacyJobSyncId(businessId, index, job);
+            if (!job._updatedAt) job._updatedAt = 1;
+            return job;
+        }
+
+        function markJobChanged(job) {
+            if (!job) return;
+            if (!job._syncId) job._syncId = createJobSyncId();
+            job._updatedAt = Date.now();
+        }
+
+        function recordJobDeletion(job) {
+            if (!job || !activeJobBusinessId) return;
+            ensureJobSyncMetadata(job, activeJobBusinessId, jobTitles.indexOf(job));
+            const all = parseSyncJson(localStorage.getItem('bbBusinessJobTombstones'), {});
+            const businessDeletes = all[String(activeJobBusinessId)] || {};
+            businessDeletes[String(job._syncId)] = Date.now();
+            all[String(activeJobBusinessId)] = businessDeletes;
+            localStorage.setItem('bbBusinessJobTombstones', JSON.stringify(all));
+        }
+
+        function syncJobChangesNow() {
+            if (typeof saveCurrentDataToProfile === 'function') saveCurrentDataToProfile();
+            if (isSharedProfile() && typeof pushToCloud === 'function') pushToCloud();
+        }
+
         function loadBusinessJobs() {
             try {
                 const saved = JSON.parse(localStorage.getItem('bbBusinessJobsByBusiness') || '{}');
@@ -9776,11 +9883,21 @@
                 jobsByBusiness[activeJobBusinessId] = legacy;
                 localStorage.setItem('bbBusinessJobsByBusiness', JSON.stringify(jobsByBusiness));
             }
+            Object.entries(jobsByBusiness).forEach(([businessId, jobs]) => {
+                if (!Array.isArray(jobs)) {
+                    jobsByBusiness[businessId] = [];
+                    return;
+                }
+                jobs.forEach((job, index) => ensureJobSyncMetadata(job, businessId, index));
+            });
             jobTitles = activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
         }
 
         function saveBusinessJobs() {
-            if (activeJobBusinessId) jobsByBusiness[activeJobBusinessId] = jobTitles;
+            if (activeJobBusinessId) {
+                jobTitles.forEach((job, index) => ensureJobSyncMetadata(job, activeJobBusinessId, index));
+                jobsByBusiness[activeJobBusinessId] = jobTitles;
+            }
             localStorage.setItem('bbBusinessJobsByBusiness', JSON.stringify(jobsByBusiness));
         }
 
@@ -9824,9 +9941,11 @@
 
         function addJobTitleFromModal() {
             if (!activeJobBusinessId) return;
+            const beforeCount = jobTitles.length;
             addJobTitle();
             saveBusinessJobs();
             closeModal('jobEditor');
+            if (jobTitles.length > beforeCount) syncJobChangesNow();
         }
 
         const baseSaveJobTitles = saveJobTitles;
