@@ -3504,8 +3504,13 @@
     <style id="JobCardMobileActionRow">
         @media (max-width:768px) {
             #jobTitleList .JobTitleItem {
-                padding:46px 13px 13px !important;
+                padding:13px !important;
                 overflow:hidden !important;
+            }
+            #jobTitleList .JobTitleName {
+                padding-right:136px !important;
+                min-height:30px;
+                box-sizing:border-box;
             }
             #jobTitleList .JobTitleActions {
                 position:absolute !important;
@@ -3687,7 +3692,7 @@
                         </div>
                         <div class="form-group" style="max-width: 100px;">
                             <label>Hours / Day</label>
-                            <input type="number" id="hoursPerDayInput" value="24" min="1" max="24" step="1" oninput="recalcWages()">
+                            <input type="number" id="hoursPerDayInput" value="24" min="1" max="24" step="1" oninput="updateAllJobHours()">
                         </div>
                         <div class="form-group" style="max-width: 80px;">
                             <label>Days</label>
@@ -6849,6 +6854,34 @@
             used.textContent = '$' + totalCost.toLocaleString() + ' total' + (days > 1 ? ' (' + days + ' days × $' + dailyTotal.toLocaleString() + '/day)' : '');
             pct.textContent = Math.round(ratio * 100) + '%';
             pct.style.color = ratio > 1 ? 'rgba(239, 68, 68, 0.9)' : ratio > 0.85 ? 'rgba(245, 158, 11, 0.9)' : '';
+        }
+
+        function updateAllJobHours() {
+            const input = document.getElementById('hoursPerDayInput');
+            const parsed = parseInt(input.value);
+            if (!Number.isFinite(parsed)) return;
+
+            const hours = Math.max(1, Math.min(24, parsed));
+            localStorage.setItem('bbHoursPerDay', String(hours));
+
+            let changed = false;
+            Object.entries(jobsByBusiness).forEach(([businessId, jobs]) => {
+                if (!Array.isArray(jobs)) return;
+                jobs.forEach((job, index) => {
+                    if (!job || Number(job.hoursPerDay) === hours) return;
+                    job.hoursPerDay = hours;
+                    ensureJobSyncMetadata(job, businessId, index);
+                    markJobChanged(job);
+                    changed = true;
+                });
+            });
+
+            // Keep the active business array pointing at the updated shared map.
+            jobTitles = activeJobBusinessId ? (jobsByBusiness[activeJobBusinessId] || []) : [];
+            saveBusinessJobs();
+            recalcWages();
+
+            if (changed) syncJobChangesNow();
         }
 
         function recalcWages() {
