@@ -7731,9 +7731,9 @@
             const grid = document.getElementById('businessDetailGrid');
             let html = '';
             businessLabels.forEach((biz, idx) => {
-                const bizOrders = orders.filter(o => o.businessId === biz.id && o.status === 'completed');
+                const bizOrders = orders.filter(o => String(o.businessId) === String(biz.id) && o.status === 'completed');
                 const totalIncome = bizOrders.reduce((s, o) => s + (o.total || 0), 0);
-                const staffCount = employees.filter(e => e.businessLabelId === biz.id).length;
+                const staffCount = employees.filter(e => String(e.businessLabelId) === String(biz.id)).length;
 
                 html += `
                     <div class="BusinessDetailCard" role="button" tabindex="0" onclick="openBusinessDetailView(${idx})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBusinessDetailView(${idx})}">
@@ -7801,16 +7801,29 @@
             const biz = businessLabels[idx];
             if (!biz) return;
 
-            const bizOrders = orders.filter(o => o.businessId === biz.id);
+            const bizOrders = orders.filter(o => String(o.businessId) === String(biz.id));
             const completedOrders = bizOrders.filter(o => o.status === 'completed');
             const pendingOrders = bizOrders.filter(o => o.status === 'pending');
             const totalIncome = completedOrders.reduce((s, o) => s + (o.total || 0), 0);
-            const bizEmployees = employees.filter(e => e.businessLabelId === biz.id);
-            const staffCost = bizEmployees.reduce((s, emp) => {
-                if (emp.jobIndex !== null && emp.jobIndex !== undefined && emp.jobIndex < jobTitles.length) {
-                    return s + (jobTitles[emp.jobIndex].wage || 0);
+            const bizEmployees = employees.filter(e => String(e.businessLabelId) === String(biz.id));
+            const businessJobs = jobsByBusiness[String(biz.id)] || jobsByBusiness[biz.id] || [];
+
+            const getEmployeeBusinessJob = emp => {
+                if (emp.jobSyncId) {
+                    const syncIndex = businessJobs.findIndex(job => String(job?._syncId || '') === String(emp.jobSyncId));
+                    if (syncIndex >= 0) return businessJobs[syncIndex];
                 }
-                return s;
+                if (emp.jobIndex !== null && emp.jobIndex !== undefined && businessJobs[emp.jobIndex]) {
+                    return businessJobs[emp.jobIndex];
+                }
+                return null;
+            };
+
+            const staffCost = bizEmployees.reduce((sum, emp) => {
+                const job = getEmployeeBusinessJob(emp);
+                if (!job || job.wage === null || job.wage === undefined) return sum;
+                const hours = job.hoursPerDay || 24;
+                return sum + ((job.wage / 24) * hours);
             }, 0);
 
             const statsEl = document.getElementById('businessOverviewStats');
@@ -7832,14 +7845,17 @@
             } else {
                 html += '<div style="display:flex;flex-direction:column;gap:4px;">';
                 bizEmployees.forEach(emp => {
-                    const job = (emp.jobIndex !== null && emp.jobIndex !== undefined && emp.jobIndex < jobTitles.length) ? jobTitles[emp.jobIndex] : null;
-                    const wage = job ? job.wage || 0 : 0;
+                    const job = getEmployeeBusinessJob(emp);
+                    const hours = job?.hoursPerDay || 24;
+                    const wage = job && job.wage !== null && job.wage !== undefined
+                        ? (job.wage / 24) * hours
+                        : 0;
                     html += `
                         <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.2);border-radius:10px;border:1px solid rgba(255,255,255,0.3);">
-                            ${emp.avatarUrl ? `<img src="${emp.avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size:20px;color:rgba(0,0,0,0.2);">person</span>`}
+                            ${emp.avatarUrl ? `<img src="${escapeHtml(emp.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">` : `<span class="material-symbols-outlined" style="font-size:20px;color:rgba(0,0,0,0.2);">person</span>`}
                             <span style="font-weight:500;font-size:13px;flex:1;">${escapeHtml(emp.name || emp.username || 'Unknown')}</span>
-                            ${job ? `<span style="font-size:11px;color:rgba(0,0,0,0.4);">${escapeHtml(job.title)}</span>` : ''}
-                            <span style="font-size:12px;color:rgba(239,68,68,0.7);font-weight:600;">$${wage.toLocaleString()}/pd</span>
+                            ${job ? `<span style="font-size:11px;color:rgba(0,0,0,0.4);">${escapeHtml(job.title)}</span>` : '<span style="font-size:11px;color:rgba(0,0,0,0.3);">No job</span>'}
+                            <span style="font-size:12px;color:rgba(239,68,68,0.7);font-weight:600;">${wage.toLocaleString(undefined,{maximumFractionDigits:2})}/day</span>
                         </div>
                     `;
                 });
