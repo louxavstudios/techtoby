@@ -3501,6 +3501,54 @@
         .FinanceEmptyAdd:focus-visible{outline:2px solid rgba(99,102,241,.55);outline-offset:2px}
         .FinanceEmptyAdd .material-symbols-outlined{color:rgba(99,102,241,.72)}
     </style>
+    <style id="JobCardMobileActionRow">
+        @media (max-width:768px) {
+            #jobTitleList .JobTitleItem {
+                padding:46px 13px 13px !important;
+                overflow:hidden !important;
+            }
+            #jobTitleList .JobTitleActions {
+                position:absolute !important;
+                top:7px !important;
+                right:7px !important;
+                z-index:4 !important;
+                width:auto !important;
+                display:flex !important;
+                align-items:center !important;
+                justify-content:flex-end !important;
+                gap:4px !important;
+            }
+            #jobTitleList .JobTitleActions > div {
+                display:none !important;
+            }
+            #jobTitleList .JobTitleActions > button.JobActionBtn,
+            #jobTitleList .JobTitleActions > button.RemoveJobBtn {
+                display:grid !important;
+                place-items:center !important;
+                flex:0 0 30px !important;
+                width:30px !important;
+                height:30px !important;
+                min-width:30px !important;
+                padding:0 !important;
+                margin:0 !important;
+                border:0 !important;
+                border-radius:8px !important;
+                background:rgba(255,255,255,.38) !important;
+                touch-action:manipulation;
+            }
+            #jobTitleList .JobTitleActions > button .material-symbols-outlined {
+                font-size:17px !important;
+                pointer-events:none;
+            }
+            #jobTitleList .JobTitleActions > button.RemoveJobBtn .material-symbols-outlined {
+                color:rgba(220,38,38,.78) !important;
+            }
+            #jobTitleList .JobContextMenuButton,
+            #jobTitleList .JobContextMenu {
+                display:none !important;
+            }
+        }
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -6733,50 +6781,9 @@
                     </div>
                 `;
 
-                const actions = item.querySelector('.JobTitleActions');
-                if (actions) {
-                    const menuButton = document.createElement('button');
-                    menuButton.type = 'button';
-                    menuButton.className = 'JobContextMenuButton';
-                    menuButton.setAttribute('aria-label', 'Job actions');
-                    menuButton.setAttribute('aria-expanded', 'false');
-                    menuButton.innerHTML = '<span class="material-symbols-outlined">more_vert</span>';
-                    const menu = document.createElement('div');
-                    menu.className = 'JobContextMenu';
-                    menu.innerHTML =
-                        '<button type="button" data-job-action="toggle"><span class="material-symbols-outlined">' + (job.disabled ? 'toggle_off' : 'toggle_on') + '</span>' + (job.disabled ? 'Enable' : 'Disable') + '</button>' +
-                        '<button type="button" data-job-action="edit"><span class="material-symbols-outlined">edit</span>Edit</button>' +
-                        '<button type="button" data-job-action="duplicate"><span class="material-symbols-outlined">content_copy</span>Duplicate</button>' +
-                        '<button type="button" class="danger" data-job-action="remove"><span class="material-symbols-outlined">delete</span>Remove</button>';
-                    menuButton.addEventListener('click', event => {
-                        event.stopPropagation();
-                        document.querySelectorAll('.JobContextMenu.open').forEach(openMenu => {
-                            if (openMenu !== menu) openMenu.classList.remove('open');
-                        });
-                        const open = menu.classList.toggle('open');
-                        menuButton.setAttribute('aria-expanded', String(open));
-                    });
-                    menu.addEventListener('click', event => {
-                        const button = event.target.closest('[data-job-action]');
-                        if (!button) return;
-                        event.stopPropagation();
-                        menu.classList.remove('open');
-                        if (button.dataset.jobAction === 'toggle') toggleJobDisabled(i);
-                        else if (button.dataset.jobAction === 'edit') startEditJob(i);
-                        else if (button.dataset.jobAction === 'duplicate') duplicateJob(i);
-                        else if (button.dataset.jobAction === 'remove') removeJobTitle(i);
-                    });
-                    actions.prepend(menuButton);
-                    actions.appendChild(menu);
-                }
                 list.appendChild(item);
             });
         }
-
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.JobContextMenu.open').forEach(menu => menu.classList.remove('open'));
-            document.querySelectorAll('.JobContextMenuButton[aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
-        });
 
         function updateBudgetBar(dailyTotal, budget, days) {
             const container = document.getElementById('budgetBarContainer');
