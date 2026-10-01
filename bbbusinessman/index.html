@@ -4041,7 +4041,7 @@
             <section class="FinanceWizardStep" data-finance-step="4"><div class="FinanceWizardHeading">Income or expense?</div><div class="FinanceChoiceGrid two"><button type="button" data-finance-type="income"><span class="material-symbols-outlined">trending_up</span>Income</button><button type="button" data-finance-type="expense"><span class="material-symbols-outlined">trending_down</span>Expense</button></div><input type="hidden" id="financeTxType"></section>
             <section class="FinanceWizardStep" data-finance-step="5"><div class="FinanceWizardHeading">Add a subtype <small>Optional · one word</small></div><div class="form-group"><input type="text" id="financeTxSubtype" placeholder="e.g. Bills" maxlength="24"></div></section>
             <section class="FinanceWizardStep" data-finance-step="6"><div class="FinanceWizardHeading">How much?</div><div class="form-group"><label>Amount ($)</label><input type="number" id="financeTxAmount" min="0" step="1" placeholder="0"></div><div class="ContentDesc">The amount is stored with the lapse so this history can be used for future financial estimates.</div></section>
-            <div class="FinanceWizardActions"><button class="GTextBtn" id="financeWizardBack" type="button" onclick="financeWizardBack()" hidden>Back</button><span></span><button class="GTextBtn" type="button" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" id="financeWizardNext" type="button" onclick="financeWizardNext()">Next</button><button class="GTextBtn primary" id="financeWizardSave" type="button" onclick="saveFinanceTransaction()" hidden><span class="material-symbols-outlined">check</span>Add Record</button></div>
+            <div class="FinanceWizardActions"><button class="GTextBtn" id="financeWizardBack" type="button" onclick="financeWizardBack()" hidden>Back</button><span></span><button class="GTextBtn" type="button" onclick="closeModal('financeTransaction')">Cancel</button><button class="GTextBtn primary" id="financeWizardNext" type="button" onclick="financeWizardNext()">Next</button></div>
         </div>
     </div>
 
@@ -4336,9 +4336,6 @@
                 <span></span>
                 <button class="GTextBtn" type="button" onclick="closeModal('partnership')">Cancel</button>
                 <button class="GTextBtn primary" id="partnerWizardNext" type="button" onclick="partnerWizardNext()">Next</button>
-                <button class="GTextBtn primary" id="partnerWizardSave" type="button" onclick="savePartnership()" hidden>
-                    <span class="material-symbols-outlined">check</span> Save
-                </button>
             </div>
         </div>
     </div>
@@ -8779,8 +8776,12 @@
             document.getElementById('partnerStepLabel').textContent = 'Step ' + partnerWizardStep + ' of 2';
             document.getElementById('partnerStepBar').style.width = (partnerWizardStep * 50) + '%';
             document.getElementById('partnerWizardBack').hidden = partnerWizardStep === 1;
-            document.getElementById('partnerWizardNext').hidden = partnerWizardStep === 2;
-            document.getElementById('partnerWizardSave').hidden = partnerWizardStep !== 2;
+            const nextButton = document.getElementById('partnerWizardNext');
+            if (partnerWizardStep === 2) {
+                nextButton.innerHTML = '<span class="material-symbols-outlined">check</span>' + (editingPartnerIndex >= 0 ? 'Save' : 'Add Partner');
+            } else {
+                nextButton.textContent = 'Next';
+            }
         }
 
         function renderPartnerOwnerPreview() {
@@ -8883,6 +8884,11 @@
         }
 
         function partnerWizardNext() {
+            if (partnerWizardStep === 2) {
+                savePartnership();
+                return;
+            }
+
             const username = document.getElementById('partnerOwner').value.trim();
             const selectedId = document.getElementById('partnerOwnerRobloxId').value || document.getElementById('partnerOwner').dataset.robloxUserId;
             if (!username || !selectedId) {
@@ -10500,8 +10506,10 @@
             document.getElementById('financeStepLabel').textContent = 'Step ' + financeWizardStep + ' of 6';
             document.getElementById('financeStepBar').style.width = (financeWizardStep / 6 * 100) + '%';
             document.getElementById('financeWizardBack').hidden = financeWizardStep === 1;
-            document.getElementById('financeWizardNext').hidden = financeWizardStep === 6;
-            document.getElementById('financeWizardSave').hidden = financeWizardStep !== 6;
+            const nextButton = document.getElementById('financeWizardNext');
+            nextButton.innerHTML = financeWizardStep === 6
+                ? '<span class="material-symbols-outlined">check</span>Add Record'
+                : 'Next';
         }
 
         function openNewFinanceTransactionModal() {
@@ -10518,6 +10526,10 @@
         }
 
         function financeWizardNext() {
+            if (financeWizardStep === 6) {
+                saveFinanceTransaction();
+                return;
+            }
             if (financeWizardStep === 2 && !document.getElementById('financeTxLapse').value) return;
             if (financeWizardStep === 3 && !document.getElementById('financeBusinessSelect').value) return;
             if (financeWizardStep === 4 && !document.getElementById('financeTxType').value) return;
