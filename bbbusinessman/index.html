@@ -4755,7 +4755,7 @@
             'bbBusinessPermissions','bbSalaryMode','bbBusinessJobs','bbBudget','bbHoursPerDay','bbDays',
             'bbPermLabels','bbRoleLabels','bbCustomRanges','bbBusinessPresets','bbBusinessLabels',
             'bbBusinessEmployees','bbWorkdayRecords','bbFinanceRecords','bbPartnerships',
-            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones','bbBusinessJobTombstones','bbBusinessEmployeeTombstones'
+            'bbInventoryItems','bbInventories','bbOrders','bbWhiteboards','bbBusinessJobsByBusiness','bbBusinessTombstones','bbBusinessJobTombstones','bbBusinessEmployeeTombstones','bbPartnershipTombstones'
         ];
 
         // The account owns personal data; shared business sessions remain separate.
@@ -5807,12 +5807,49 @@
                 mergedEmployees.push(employee);
             });
 
+            const secondaryPartnerships = parseSyncJson(secondaryData.bbPartnerships, []);
+            const primaryPartnerships = parseSyncJson(primaryData.bbPartnerships, []);
+            const secondaryPartnershipDeletes = parseSyncJson(secondaryData.bbPartnershipTombstones, {});
+            const primaryPartnershipDeletes = parseSyncJson(primaryData.bbPartnershipTombstones, {});
+            const mergedPartnershipDeletes = { ...secondaryPartnershipDeletes };
+
+            Object.entries(primaryPartnershipDeletes).forEach(([partnerId, ts]) => {
+                mergedPartnershipDeletes[partnerId] = Math.max(Number(mergedPartnershipDeletes[partnerId]) || 0, Number(ts) || 0);
+            });
+
+            const partnershipsById = new Map();
+            const addPartnership = (partner, index, preferOnTie) => {
+                if (!partner) return;
+                const normalized = normalizePartnershipSyncData(partner, index);
+                const id = String(normalized._syncId);
+                const current = partnershipsById.get(id);
+                if (!current) {
+                    partnershipsById.set(id, normalized);
+                    return;
+                }
+                const currentTs = Number(current._updatedAt) || 0;
+                const incomingTs = Number(normalized._updatedAt) || 0;
+                if (incomingTs > currentTs || (incomingTs === currentTs && preferOnTie)) partnershipsById.set(id, normalized);
+            };
+
+            secondaryPartnerships.forEach((partner, index) => addPartnership(partner, index, false));
+            primaryPartnerships.forEach((partner, index) => addPartnership(partner, index, true));
+
+            const mergedPartnerships = [];
+            partnershipsById.forEach((partner, partnerId) => {
+                const deletedAt = Number(mergedPartnershipDeletes[partnerId]) || 0;
+                const updatedAt = Number(partner._updatedAt) || 0;
+                if (!deletedAt || updatedAt > deletedAt) mergedPartnerships.push(partner);
+            });
+
             merged.bbBusinessLabels = JSON.stringify(businesses);
             merged.bbBusinessTombstones = JSON.stringify(tombstones);
             merged.bbBusinessJobsByBusiness = JSON.stringify(mergedJobs);
             merged.bbBusinessJobTombstones = JSON.stringify(mergedJobDeletes);
             merged.bbBusinessEmployees = JSON.stringify(mergedEmployees);
             merged.bbBusinessEmployeeTombstones = JSON.stringify(mergedEmployeeDeletes);
+            merged.bbPartnerships = JSON.stringify(mergedPartnerships);
+            merged.bbPartnershipTombstones = JSON.stringify(mergedPartnershipDeletes);
             return merged;
         }
 
@@ -5829,10 +5866,13 @@
             loadBusinessLabels();
             loadBusinessJobs();
             loadEmployees();
+            loadPartnerships();
             if (typeof renderBusinessDetailGrid === 'function') renderBusinessDetailGrid();
             if (typeof renderJobBusinessSelect === 'function') renderJobBusinessSelect();
             if (typeof renderStaffGrid === 'function') renderStaffGrid();
             if (typeof renderSimpleFinanceGrid === 'function') renderSimpleFinanceGrid();
+            if (typeof renderPartnerGrid === 'function') renderPartnerGrid();
+            if (activePartnerId !== null && typeof renderPartnerDetail === 'function') renderPartnerDetail();
         }
 
         async function pushToCloud() {
@@ -5858,7 +5898,7 @@
                 }
 
                 // Keep this client on the same merged business list immediately.
-                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness','bbBusinessJobTombstones','bbBusinessEmployees','bbBusinessEmployeeTombstones'].forEach(key => {
+                ['bbBusinessLabels','bbBusinessTombstones','bbBusinessJobsByBusiness','bbBusinessJobTombstones','bbBusinessEmployees','bbBusinessEmployeeTombstones','bbPartnerships','bbPartnershipTombstones'].forEach(key => {
                     if (data[key] !== undefined) localStorage.setItem(key, data[key]);
                 });
                 refreshBusinessSyncViews();
@@ -8736,12 +8776,58 @@
         let activePartnerId = null;
         let editingPartnerIndex = -1;
 
+        function getLegacyPartnershipSyncId(partner, index) {
+            if (partner && partner.id !== undefined && partner.id !== null) return 'partner-' + String(partner.id);
+            return 'partner-legacy-' + simpleHash([
+                String(index),
+                partner?.ownerRobloxId || '',
+                partner?.ownerUsername || '',
+                partner?.name || ''
+            ].join('|'));
+        }
+
+        function normalizePartnershipSyncData(partner, index) {
+            if (!partner) return partner;
+            const normalized = { ...partner };
+            if (!normalized._syncId) normalized._syncId = getLegacyPartnershipSyncId(normalized, index);
+            if (!normalized._updatedAt) normalized._updatedAt = 1;
+            if (!Array.isArray(normalized.transactions)) normalized.transactions = [];
+            return normalized;
+        }
+
         function loadPartnerships() {
-            partnerships = JSON.parse(localStorage.getItem('bbPartnerships') || '[]');
+            try {
+                const saved = JSON.parse(localStorage.getItem('bbPartnerships') || '[]');
+                partnerships = Array.isArray(saved)
+                    ? saved.map((partner, index) => normalizePartnershipSyncData(partner, index))
+                    : [];
+            } catch (error) {
+                partnerships = [];
+            }
         }
 
         function savePartnerships() {
+            partnerships = partnerships.map((partner, index) => normalizePartnershipSyncData(partner, index));
             localStorage.setItem('bbPartnerships', JSON.stringify(partnerships));
+        }
+
+        function markPartnershipChanged(partner) {
+            if (!partner) return;
+            if (!partner._syncId) partner._syncId = getLegacyPartnershipSyncId(partner, partnerships.indexOf(partner));
+            partner._updatedAt = Date.now();
+        }
+
+        function recordPartnershipDeletion(partner) {
+            if (!partner) return;
+            const normalized = normalizePartnershipSyncData(partner, partnerships.indexOf(partner));
+            const tombstones = parseSyncJson(localStorage.getItem('bbPartnershipTombstones'), {});
+            tombstones[String(normalized._syncId)] = Date.now();
+            localStorage.setItem('bbPartnershipTombstones', JSON.stringify(tombstones));
+        }
+
+        function syncPartnershipChangesNow() {
+            if (typeof saveCurrentDataToProfile === 'function') saveCurrentDataToProfile();
+            if (isSharedProfile() && typeof pushToCloud === 'function') pushToCloud();
         }
 
         let partnerWizardStep = 1;
@@ -8975,24 +9061,38 @@
             };
 
             if (editingPartnerIndex >= 0) {
-                Object.assign(partnerships[editingPartnerIndex], data);
+                const partner = partnerships[editingPartnerIndex];
+                Object.assign(partner, data);
+                markPartnershipChanged(partner);
             } else {
-                partnerships.push({ id: Date.now(), ...data, transactions: [] });
+                const id = Date.now();
+                partnerships.push({
+                    id,
+                    _syncId: 'partner-' + String(id),
+                    _updatedAt: Date.now(),
+                    ...data,
+                    transactions: []
+                });
             }
 
             savePartnerships();
             closeModal('partnership');
             if (activePartnerId !== null) renderPartnerDetail();
             renderPartnerGrid();
+            syncPartnershipChangesNow();
         }
 
         function removePartnership(index) {
             if (!confirm('Delete this partner?')) return;
-            const id = partnerships[index].id;
+            const partner = partnerships[index];
+            if (!partner) return;
+            const id = partner.id;
+            recordPartnershipDeletion(partner);
             partnerships.splice(index, 1);
             savePartnerships();
             if (activePartnerId === id) closePartnerDetail();
             renderPartnerGrid();
+            syncPartnershipChangesNow();
         }
 
         function getPartnerOwnerInlineHTML(partner) {
@@ -9119,17 +9219,21 @@
             if (amount <= 0) return;
             if (!p.transactions) p.transactions = [];
             p.transactions.push({ id: Date.now(), date, type, description, amount });
+            markPartnershipChanged(p);
             savePartnerships();
             closeModal('transaction');
             renderPartnerDetail();
+            syncPartnershipChangesNow();
         }
 
         function removeTransaction(i) {
             const p = partnerships.find(x => x.id === activePartnerId);
             if (!p) return;
             p.transactions.splice(i, 1);
+            markPartnershipChanged(p);
             savePartnerships();
             renderPartnerDetail();
+            syncPartnershipChangesNow();
         }
 
         // ===== CONVERTERS =====
