@@ -3554,6 +3554,32 @@
             }
         }
     </style>
+    <style id="PartnerWizardStyles">
+        .PartnerWizardModal{width:min(440px,calc(100vw - 28px))}
+        .PartnerWizardProgress{margin-bottom:20px;font-size:11px;color:rgba(0,0,0,.45)}
+        .PartnerWizardProgress>div{height:4px;background:rgba(0,0,0,.08);border-radius:99px;margin-top:7px;overflow:hidden}
+        .PartnerWizardProgress i{display:block;height:100%;width:50%;background:rgba(99,102,241,.8);transition:width .2s}
+        .PartnerWizardStep{display:none;min-height:180px}
+        .PartnerWizardStep.active{display:block}
+        .PartnerWizardHeading{font-size:18px;font-weight:600;margin-bottom:16px}
+        .PartnerWizardStep label small{font-size:10px;font-weight:400;color:rgba(0,0,0,.42);margin-left:4px}
+        .PartnerOwnerPreview{display:flex;align-items:center;gap:11px;padding:11px;border-radius:12px;background:rgba(255,255,255,.3);margin-top:10px}
+        .PartnerOwnerPreview[hidden]{display:none}
+        .PartnerOwnerAvatar,.PartnerOwnerAvatarPlaceholder{width:48px;height:48px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:rgba(99,102,241,.1);overflow:hidden;flex:none}
+        .PartnerOwnerAvatarPlaceholder .material-symbols-outlined{font-size:25px;color:rgba(99,102,241,.65)}
+        .PartnerOwnerPreview>div:last-child{display:flex;flex-direction:column;min-width:0}
+        .PartnerOwnerPreview strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .PartnerOwnerPreview span{font-size:11px;color:rgba(0,0,0,.48);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .PartnerLogoUploadPlaceholder{min-height:78px;border:1px dashed rgba(99,102,241,.35);border-radius:11px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:rgba(0,0,0,.5);cursor:pointer}
+        .PartnerLogoUploadPlaceholder .material-symbols-outlined{font-size:20px}
+        .PartnerLogoWizardPreview{max-width:100%;max-height:92px;object-fit:contain;border-radius:10px}
+        #partnerLogoPreviewArea.has-image{display:flex;align-items:flex-start;gap:9px;padding:9px;border-radius:11px;background:rgba(255,255,255,.24)}
+        .PartnerWizardActions{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;margin-top:18px}
+        #partnerDescription{resize:vertical;min-height:72px}
+        .PartnerOwnerInline{display:inline-flex;align-items:center;gap:6px}
+        .PartnerOwnerInline img{width:20px;height:20px;border-radius:50%;object-fit:cover}
+        @media(max-width:768px){.PartnerWizardStep{min-height:205px}}
+    </style>
 </head>
 
 <body><div class="gridOverlay"></div>
@@ -4252,42 +4278,65 @@
 
     <!-- Partnership Modal -->
     <div class="ModalOverlay" id="partnershipModal" onclick="if(event.target===this)closeModal('partnership')">
-        <div class="ModalContent">
+        <div class="ModalContent PartnerWizardModal">
             <div class="ModalTitle">
                 <span id="partnershipModalTitle">Add Partner</span>
                 <button class="ModalClose" onclick="closeModal('partnership')">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            <div class="form-group">
-                <label>Business Name</label>
-                <input type="text" id="partnerName" placeholder="e.g. Bob's Burgers">
+
+            <div class="PartnerWizardProgress">
+                <span id="partnerStepLabel">Step 1 of 2</span>
+                <div><i id="partnerStepBar"></i></div>
             </div>
-            <div class="InputRow">
-                <div class="form-group" style="flex: 1;">
-                    <label>Owner Username</label>
-                    <input type="text" id="partnerOwner" placeholder="e.g. BobTheBuilder">
+
+            <section class="PartnerWizardStep active" data-partner-step="1">
+                <div class="PartnerWizardHeading">Partner username</div>
+                <div class="form-group">
+                    <label>Roblox Username</label>
+                    <input type="text" id="partnerOwner" placeholder="Search Roblox username..." autocomplete="off">
                 </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Owner Profile URL</label>
-                    <input type="text" id="partnerProfileUrl" placeholder="https://roblox.com/users/...">
+                <input type="hidden" id="partnerOwnerAvatarUrl">
+                <input type="hidden" id="partnerOwnerDisplayName">
+                <input type="hidden" id="partnerOwnerRobloxId">
+                <input type="hidden" id="partnerProfileUrl">
+
+                <div class="PartnerOwnerPreview" id="partnerOwnerPreview" hidden>
+                    <div class="PartnerOwnerAvatarPlaceholder" id="partnerOwnerAvatarPreview">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                    <div>
+                        <strong id="partnerOwnerDisplayPreview"></strong>
+                        <span id="partnerOwnerUsernamePreview"></span>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>Logo URL</label>
-                <input type="text" id="partnerLogoUrl" placeholder="Paste image URL...">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="partnerDescription" placeholder="Brief description...">
-            </div>
-            <div class="form-group">
-                <label>Net Worth ($)</label>
-                <input type="number" id="partnerNetWorth" placeholder="0" min="0" step="100">
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="GTextBtn" onclick="closeModal('partnership')">Cancel</button>
-                <button class="GTextBtn primary" onclick="savePartnership()">
+            </section>
+
+            <section class="PartnerWizardStep" data-partner-step="2">
+                <div class="PartnerWizardHeading">Business details</div>
+                <div class="form-group">
+                    <label>Business Name</label>
+                    <input type="text" id="partnerName" placeholder="e.g. Bob's Burgers">
+                </div>
+                <div class="form-group">
+                    <label>Business Logo <small>Optional</small></label>
+                    <div id="partnerLogoPreviewArea"></div>
+                    <input type="file" id="partnerLogoFileInput" accept="image/*" style="display:none" onchange="handlePartnerLogoFile(this)">
+                    <input type="text" id="partnerLogoUrl" placeholder="Or paste image URL" oninput="previewPartnerLogoUrl(this.value)" style="margin-top:7px;">
+                </div>
+                <div class="form-group">
+                    <label>Description <small>Optional</small></label>
+                    <textarea id="partnerDescription" rows="3" placeholder="Brief description..."></textarea>
+                </div>
+            </section>
+
+            <div class="PartnerWizardActions">
+                <button class="GTextBtn" id="partnerWizardBack" type="button" onclick="partnerWizardBack()" hidden>Back</button>
+                <span></span>
+                <button class="GTextBtn" type="button" onclick="closeModal('partnership')">Cancel</button>
+                <button class="GTextBtn primary" id="partnerWizardNext" type="button" onclick="partnerWizardNext()">Next</button>
+                <button class="GTextBtn primary" id="partnerWizardSave" type="button" onclick="savePartnership()" hidden>
                     <span class="material-symbols-outlined">check</span> Save
                 </button>
             </div>
@@ -8682,47 +8731,233 @@
             localStorage.setItem('bbPartnerships', JSON.stringify(partnerships));
         }
 
+        let partnerWizardStep = 1;
+
+        window.TechtobyAccount?.bindRobloxAutocomplete(document.getElementById('partnerOwner'), profile => {
+            const usernameInput = document.getElementById('partnerOwner');
+            const robloxId = usernameInput.dataset.robloxUserId || profile.id || profile.userId || '';
+            usernameInput.value = profile.username || '';
+            document.getElementById('partnerOwnerAvatarUrl').value = profile.pfp || '';
+            document.getElementById('partnerOwnerDisplayName').value = profile.displayName || profile.username || '';
+            document.getElementById('partnerOwnerRobloxId').value = robloxId;
+            document.getElementById('partnerProfileUrl').value = robloxId ? 'https://www.roblox.com/users/' + robloxId + '/profile' : '';
+            renderPartnerOwnerPreview();
+        });
+
+        document.getElementById('partnerOwner')?.addEventListener('input', () => {
+            const input = document.getElementById('partnerOwner');
+            const selectedId = document.getElementById('partnerOwnerRobloxId').value;
+            if (input.dataset.robloxUserId && String(input.dataset.robloxUserId) === String(selectedId)) return;
+            document.getElementById('partnerOwnerAvatarUrl').value = '';
+            document.getElementById('partnerOwnerDisplayName').value = '';
+            document.getElementById('partnerOwnerRobloxId').value = '';
+            document.getElementById('partnerProfileUrl').value = '';
+            document.getElementById('partnerOwnerPreview').hidden = true;
+        });
+
+        function setPartnerWizardStep(step) {
+            partnerWizardStep = Math.max(1, Math.min(2, step));
+            document.querySelectorAll('.PartnerWizardStep').forEach(el => {
+                el.classList.toggle('active', Number(el.dataset.partnerStep) === partnerWizardStep);
+            });
+            document.getElementById('partnerStepLabel').textContent = 'Step ' + partnerWizardStep + ' of 2';
+            document.getElementById('partnerStepBar').style.width = (partnerWizardStep * 50) + '%';
+            document.getElementById('partnerWizardBack').hidden = partnerWizardStep === 1;
+            document.getElementById('partnerWizardNext').hidden = partnerWizardStep === 2;
+            document.getElementById('partnerWizardSave').hidden = partnerWizardStep !== 2;
+        }
+
+        function renderPartnerOwnerPreview() {
+            const username = document.getElementById('partnerOwner').value.trim();
+            const displayName = document.getElementById('partnerOwnerDisplayName').value.trim() || username;
+            const avatar = document.getElementById('partnerOwnerAvatarUrl').value.trim();
+            const preview = document.getElementById('partnerOwnerPreview');
+            document.getElementById('partnerOwnerDisplayPreview').textContent = displayName;
+            document.getElementById('partnerOwnerUsernamePreview').textContent = username ? '@' + username : '';
+
+            const current = document.getElementById('partnerOwnerAvatarPreview');
+            let replacement;
+            if (avatar) {
+                replacement = document.createElement('img');
+                replacement.className = 'PartnerOwnerAvatar';
+                replacement.src = avatar;
+                replacement.alt = '';
+                replacement.onerror = () => {
+                    const fallback = document.createElement('div');
+                    fallback.id = 'partnerOwnerAvatarPreview';
+                    fallback.className = 'PartnerOwnerAvatarPlaceholder';
+                    fallback.innerHTML = '<span class="material-symbols-outlined">person</span>';
+                    replacement.replaceWith(fallback);
+                };
+            } else {
+                replacement = document.createElement('div');
+                replacement.className = 'PartnerOwnerAvatarPlaceholder';
+                replacement.innerHTML = '<span class="material-symbols-outlined">person</span>';
+            }
+            replacement.id = 'partnerOwnerAvatarPreview';
+            current.replaceWith(replacement);
+            preview.hidden = !username;
+        }
+
+        function resetPartnerLogoPreview() {
+            const area = document.getElementById('partnerLogoPreviewArea');
+            area.classList.remove('has-image');
+            area.innerHTML = '';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'PartnerLogoUploadPlaceholder';
+            placeholder.innerHTML = '<span class="material-symbols-outlined">image</span><span>Upload logo</span>';
+            placeholder.onclick = () => document.getElementById('partnerLogoFileInput').click();
+            area.appendChild(placeholder);
+        }
+
+        function showPartnerLogoPreview(src) {
+            const area = document.getElementById('partnerLogoPreviewArea');
+            area.classList.add('has-image');
+            area.innerHTML = '';
+
+            const image = document.createElement('img');
+            image.className = 'PartnerLogoWizardPreview';
+            image.src = src;
+            image.alt = '';
+            image.onerror = () => resetPartnerLogoPreview();
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'GTextBtn danger';
+            remove.style.cssText = 'padding:5px 8px';
+            remove.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px">close</span>';
+            remove.onclick = clearPartnerLogo;
+
+            area.appendChild(image);
+            area.appendChild(remove);
+        }
+
+        function previewPartnerLogoUrl(value) {
+            const url = value.trim();
+            if (url) showPartnerLogoPreview(url);
+            else resetPartnerLogoPreview();
+        }
+
+        async function handlePartnerLogoFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (isSharedProfile()) {
+                try {
+                    const url = await uploadToCDN(file);
+                    document.getElementById('partnerLogoUrl').value = url;
+                    showPartnerLogoPreview(url);
+                } catch (error) {
+                    console.error('Partner logo upload failed:', error);
+                }
+            } else {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    document.getElementById('partnerLogoUrl').value = event.target.result;
+                    showPartnerLogoPreview(event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+            input.value = '';
+        }
+
+        function clearPartnerLogo() {
+            document.getElementById('partnerLogoUrl').value = '';
+            resetPartnerLogoPreview();
+        }
+
+        function partnerWizardNext() {
+            const username = document.getElementById('partnerOwner').value.trim();
+            const selectedId = document.getElementById('partnerOwnerRobloxId').value || document.getElementById('partnerOwner').dataset.robloxUserId;
+            if (!username || !selectedId) {
+                document.getElementById('partnerOwner').focus();
+                return;
+            }
+            setPartnerWizardStep(2);
+            setTimeout(() => document.getElementById('partnerName').focus(), 50);
+        }
+
+        function partnerWizardBack() {
+            setPartnerWizardStep(1);
+        }
+
         function openNewPartnerModal() {
             editingPartnerIndex = -1;
             document.getElementById('partnershipModalTitle').textContent = 'Add Partner';
             document.getElementById('partnerName').value = '';
             document.getElementById('partnerOwner').value = '';
+            delete document.getElementById('partnerOwner').dataset.robloxUserId;
+            document.getElementById('partnerOwnerAvatarUrl').value = '';
+            document.getElementById('partnerOwnerDisplayName').value = '';
+            document.getElementById('partnerOwnerRobloxId').value = '';
             document.getElementById('partnerProfileUrl').value = '';
             document.getElementById('partnerLogoUrl').value = '';
             document.getElementById('partnerDescription').value = '';
-            document.getElementById('partnerNetWorth').value = '';
+            document.getElementById('partnerOwnerPreview').hidden = true;
+            resetPartnerLogoPreview();
+            setPartnerWizardStep(1);
             openModal('partnership');
+            setTimeout(() => document.getElementById('partnerOwner').focus(), 50);
         }
 
         function openEditPartnerModal(index) {
             editingPartnerIndex = index;
             const p = partnerships[index];
+            if (!p) return;
+
             document.getElementById('partnershipModalTitle').textContent = 'Edit Partner';
             document.getElementById('partnerName').value = p.name || '';
             document.getElementById('partnerOwner').value = p.ownerUsername || '';
+            document.getElementById('partnerOwnerAvatarUrl').value = p.ownerAvatarUrl || '';
+            document.getElementById('partnerOwnerDisplayName').value = p.ownerDisplayName || p.ownerUsername || '';
+            document.getElementById('partnerOwnerRobloxId').value = p.ownerRobloxId || '';
             document.getElementById('partnerProfileUrl').value = p.ownerProfileUrl || '';
+            if (p.ownerRobloxId) document.getElementById('partnerOwner').dataset.robloxUserId = p.ownerRobloxId;
+            else delete document.getElementById('partnerOwner').dataset.robloxUserId;
             document.getElementById('partnerLogoUrl').value = p.logoUrl || '';
             document.getElementById('partnerDescription').value = p.description || '';
-            document.getElementById('partnerNetWorth').value = p.netWorth || '';
+
+            renderPartnerOwnerPreview();
+            if (p.logoUrl) showPartnerLogoPreview(p.logoUrl);
+            else resetPartnerLogoPreview();
+
+            setPartnerWizardStep(1);
             openModal('partnership');
         }
 
         function savePartnership() {
+            const username = document.getElementById('partnerOwner').value.trim();
+            const ownerRobloxId = document.getElementById('partnerOwnerRobloxId').value || document.getElementById('partnerOwner').dataset.robloxUserId || '';
+            if (!username || !ownerRobloxId) {
+                setPartnerWizardStep(1);
+                document.getElementById('partnerOwner').focus();
+                return;
+            }
+
             const name = document.getElementById('partnerName').value.trim();
-            if (!name) { document.getElementById('partnerName').focus(); return; }
+            if (!name) {
+                setPartnerWizardStep(2);
+                document.getElementById('partnerName').focus();
+                return;
+            }
+
             const data = {
                 name,
-                ownerUsername: document.getElementById('partnerOwner').value.trim(),
-                ownerProfileUrl: document.getElementById('partnerProfileUrl').value.trim(),
+                ownerUsername: username,
+                ownerDisplayName: document.getElementById('partnerOwnerDisplayName').value.trim() || username,
+                ownerRobloxId,
+                ownerAvatarUrl: document.getElementById('partnerOwnerAvatarUrl').value.trim(),
+                ownerProfileUrl: document.getElementById('partnerProfileUrl').value.trim() || ('https://www.roblox.com/users/' + ownerRobloxId + '/profile'),
                 logoUrl: document.getElementById('partnerLogoUrl').value.trim(),
-                description: document.getElementById('partnerDescription').value.trim(),
-                netWorth: parseFloat(document.getElementById('partnerNetWorth').value) || 0
+                description: document.getElementById('partnerDescription').value.trim()
             };
+
             if (editingPartnerIndex >= 0) {
                 Object.assign(partnerships[editingPartnerIndex], data);
             } else {
                 partnerships.push({ id: Date.now(), ...data, transactions: [] });
             }
+
             savePartnerships();
             closeModal('partnership');
             if (activePartnerId !== null) renderPartnerDetail();
@@ -8736,6 +8971,14 @@
             savePartnerships();
             if (activePartnerId === id) closePartnerDetail();
             renderPartnerGrid();
+        }
+
+        function getPartnerOwnerInlineHTML(partner) {
+            if (!partner?.ownerUsername) return '';
+            const avatar = partner.ownerAvatarUrl
+                ? '<img src="' + escapeHtml(partner.ownerAvatarUrl) + '" alt="">'
+                : '';
+            return '<div class="PartnerOwner"><span class="PartnerOwnerInline">' + avatar + '<span>@' + escapeHtml(partner.ownerUsername) + '</span></span></div>';
         }
 
         function renderPartnerGrid() {
@@ -8757,7 +9000,7 @@
                     ${logoHTML}
                     <div class="PartnerInfo">
                         <div class="PartnerName">${escapeHtml(p.name)}</div>
-                        ${p.ownerUsername ? '<div class="PartnerOwner">@' + escapeHtml(p.ownerUsername) + '</div>' : ''}
+                        ${getPartnerOwnerInlineHTML(p)}
                         ${p.description ? '<div class="PartnerDesc">' + escapeHtml(p.description) + '</div>' : ''}
                         ${p.netWorth ? '<div class="PartnerNetWorth">Net Worth: $' + p.netWorth.toLocaleString() + '</div>' : ''}
                         <div style="font-size:11px;color:rgba(0,0,0,0.4);margin-top:2px;">${totalTx} transaction${totalTx !== 1 ? 's' : ''}</div>
@@ -8801,7 +9044,10 @@
             const totalExpense = (p.transactions || []).filter(t => t.type === 'expense').reduce((s, t) => s + (t.amount || 0), 0);
 
             let infoHTML = '';
-            if (p.ownerUsername) infoHTML += `<div class="SummaryCard"><div class="label">Owner</div><div class="value" style="font-size:16px;">@${escapeHtml(p.ownerUsername)}</div>${p.ownerProfileUrl ? '<div class="sub"><a href="' + escapeHtml(p.ownerProfileUrl) + '" target="_blank" rel="noopener noreferrer" style="color:rgba(99,102,241,0.8);">Profile</a></div>' : ''}</div>`;
+            if (p.ownerUsername) {
+                const ownerAvatar = p.ownerAvatarUrl ? '<img src="' + escapeHtml(p.ownerAvatarUrl) + '" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">' : '';
+                infoHTML += `<div class="SummaryCard"><div class="label">Owner</div><div class="value" style="font-size:16px;display:flex;align-items:center;gap:7px;">${ownerAvatar}<span>@${escapeHtml(p.ownerUsername)}</span></div>${p.ownerProfileUrl ? '<div class="sub"><a href="' + escapeHtml(p.ownerProfileUrl) + '" target="_blank" rel="noopener noreferrer" style="color:rgba(99,102,241,0.8);">Profile</a></div>' : ''}</div>`;
+            }
             if (p.netWorth) infoHTML += `<div class="SummaryCard"><div class="label">Net Worth</div><div class="value" style="font-size:16px;">$${p.netWorth.toLocaleString()}</div></div>`;
             infoHTML += `<div class="SummaryCard"><div class="label">Invested</div><div class="value" style="font-size:16px;color:rgba(99,102,241,0.9);">$${totalInvestment.toLocaleString()}</div></div>`;
             infoHTML += `<div class="SummaryCard"><div class="label">Income</div><div class="value" style="font-size:16px;color:rgba(22,163,74,0.9);">$${totalIncome.toLocaleString()}</div></div>`;
