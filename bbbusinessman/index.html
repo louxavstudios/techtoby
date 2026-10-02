@@ -4157,7 +4157,6 @@
                 <span></span>
                 <button class="GTextBtn" type="button" onclick="closeModal('addEmployee')">Cancel</button>
                 <button class="GTextBtn primary" id="employeeWizardNext" type="button" onclick="employeeWizardNext()">Next</button>
-                <button class="GTextBtn primary" id="employeeWizardSave" type="button" onclick="saveEmployee()" hidden><span class="material-symbols-outlined">check</span>Add Staff</button>
             </div>
         </div>
     </div>
@@ -8060,7 +8059,7 @@
             document.getElementById('employeeWizardUsername').textContent = '@' + (profile.username || '');
             document.getElementById('employeeWizardProfile').hidden = false;
             previewEmployeeAvatar();
-            document.getElementById('employeeWizardSave').disabled = false;
+            if (employeeWizardStep === 3) document.getElementById('employeeWizardNext').disabled = false;
         });
 
         function loadEmployees() {
@@ -8115,15 +8114,22 @@
                 dot.classList.toggle('done', i + 1 < employeeWizardStep);
             });
             document.getElementById('employeeWizardBack').hidden = employeeWizardStep === 1;
-            document.getElementById('employeeWizardNext').hidden = employeeWizardStep === 3;
-            document.getElementById('employeeWizardSave').hidden = employeeWizardStep !== 3;
+            const nextButton = document.getElementById('employeeWizardNext');
             if (employeeWizardStep === 3) {
-                document.getElementById('employeeWizardSave').disabled = !document.getElementById('employeeUsername').dataset.robloxUserId;
+                nextButton.innerHTML = '<span class="material-symbols-outlined">check</span>' + (editingEmployeeIndex >= 0 ? 'Save' : 'Add Staff');
+                nextButton.disabled = !document.getElementById('employeeUsername').dataset.robloxUserId;
                 setTimeout(() => document.getElementById('employeeUsername').focus(), 50);
+            } else {
+                nextButton.textContent = 'Next';
+                nextButton.disabled = false;
             }
         }
 
         function employeeWizardNext() {
+            if (employeeWizardStep === 3) {
+                saveEmployee();
+                return;
+            }
             if (employeeWizardStep === 1) {
                 const businessId = document.getElementById('employeeBusinessSelect').value;
                 if (!businessId) { document.getElementById('employeeBusinessSelect').focus(); return; }
@@ -8145,7 +8151,6 @@
             editingEmployeeIndex = index !== undefined ? index : -1;
             const editing = editingEmployeeIndex >= 0;
             document.getElementById('employeeModalTitle').textContent = editing ? 'Edit Employee' : 'Add Staff';
-            document.getElementById('employeeWizardSave').innerHTML = '<span class="material-symbols-outlined">check</span>' + (editing ? 'Save' : 'Add Staff');
 
             const bizSel = document.getElementById('employeeBusinessSelect');
             bizSel.innerHTML = '<option value="">Select a business…</option>';
