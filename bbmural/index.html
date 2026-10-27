@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <script src="../account.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mural Splitter</title>
@@ -1154,6 +1155,19 @@
             }
         }
     </style>
+    <style id="MuralExportBatchStyles">
+        .header-nav-actions { display:flex;align-items:center;gap:8px; }
+        .export-selection { display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0; }
+        .export-selection label { font-size:12px;font-weight:500; }
+        .export-selection select { padding:9px;border-radius:9px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.55); }
+        .export-selection .btn { min-height:38px; }
+        @media(max-width:768px) {
+            .HeaderSettingsButton { display:none!important; }
+            .MobileSystemNav { grid-template-columns:repeat(4,1fr)!important; }
+            .export-selection { display:grid;grid-template-columns:auto 1fr;gap:8px; }
+            .export-selection .btn { grid-column:1 / -1; }
+        }
+    </style>
 </head>
 <body>
     <img class="TreeBackground" src="https://cdn.dummtoby.network/assets/legacy/cdn.ecxogames.ca/ecxogames/assets/794037.png">
@@ -1225,12 +1239,14 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-secondary btn-icon" onclick="toggleSettingsModal(true)">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
-            <button class="LegacyHomeButton btn btn-secondary btn-icon"  onclick="window.location.href='../'" title="Back to Desktop">
-                <span class="material-symbols-outlined">home</span>
-            </button>
+            <div class="header-nav-actions">
+                <button class="btn btn-secondary btn-icon HeaderSettingsButton" onclick="toggleSettingsModal(true)" title="Settings" aria-label="Settings">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+                <button class="LegacyHomeButton btn btn-secondary btn-icon" onclick="window.location.href='../'" title="Back to Desktop">
+                    <span class="material-symbols-outlined">home</span>
+                </button>
+            </div>
         </div>
 
         <!-- Main Content -->
@@ -1442,7 +1458,7 @@
                         <span class="material-symbols-outlined">download</span>
                         Export Tiles
                     </h2>
-                    <p class="section-description">Hover over tiles to copy or download individually</p>
+                    <p class="section-description">Download single tiles, a complete row or column, or all tiles as a ZIP.</p>
                 </div>
 
                 <div class="export-header">
@@ -1451,6 +1467,15 @@
                         <span class="material-symbols-outlined">download</span>
                         Download All
                     </button>
+                </div>
+
+                <div class="export-selection">
+                    <label for="export-row-select">Row</label>
+                    <select id="export-row-select" aria-label="Select row"></select>
+                    <button class="btn btn-secondary" type="button" onclick="downloadChunkGroup('row')"><span class="material-symbols-outlined">folder_zip</span> Download Row ZIP</button>
+                    <label for="export-col-select">Column</label>
+                    <select id="export-col-select" aria-label="Select column"></select>
+                    <button class="btn btn-secondary" type="button" onclick="downloadChunkGroup('col')"><span class="material-symbols-outlined">folder_zip</span> Download Column ZIP</button>
                 </div>
 
                 <div class="progress-bar" id="download-progress">
@@ -1991,7 +2016,7 @@
                             );
                             
                             const pos = `${r + 1}${c + 1}`;
-                            const filename = `${muralId}_${pos}.png`;
+                            const filename = `${muralId}_${c + 1}_${r + 1}.png`;
                             
                             currentChunks.push({
                                 canvas: chunkCanvas,
@@ -2039,6 +2064,14 @@
                         }
                     }
                     
+                    // Fill row/column choices for group exports.
+                    const rowSelect = document.getElementById('export-row-select');
+                    const colSelect = document.getElementById('export-col-select');
+                    rowSelect.innerHTML = '';
+                    colSelect.innerHTML = '';
+                    for (let row = 1; row <= config.rows; row++) rowSelect.add(new Option('Row ' + row, String(row)));
+                    for (let col = 1; col <= config.cols; col++) colSelect.add(new Option('Column ' + col, String(col)));
+
                     // Update export info
                     document.getElementById('export-info').innerHTML = `
                         <strong>${config.rows}×${config.cols}</strong> tiles • 
@@ -2088,41 +2121,64 @@
             showToast(`Downloaded ${chunk.filename}`, 'success');
         }
 
-        function downloadAllChunks() {
-            if (currentChunks.length === 0) return;
-            
+        async function downloadChunksZip(chunks, zipName) {
+            if (!chunks.length) return;
+            if (typeof JSZip === 'undefined') {
+                showToast('ZIP library could not load. Check your connection and try again.', 'error');
+                return;
+            }
             const progressBar = document.getElementById('download-progress');
             const progressFill = document.getElementById('progress-fill');
             const statusEl = document.getElementById('download-status');
-            
+            const buttons = document.querySelectorAll('#download-all-btn, .export-selection button');
+            buttons.forEach(button => button.disabled = true);
             progressBar.classList.add('active');
-            statusEl.style.display = 'block';
             progressFill.style.width = '0%';
-            
-            let downloaded = 0;
-            const total = currentChunks.length;
-            
-            currentChunks.forEach((chunk, i) => {
-                setTimeout(() => {
-                    const link = document.createElement('a');
-                    link.download = chunk.filename;
-                    link.href = chunk.canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    downloaded++;
-                    const percent = Math.round((downloaded / total) * 100);
-                    progressFill.style.width = percent + '%';
-                    statusEl.textContent = `Downloading ${downloaded} of ${total}...`;
-                    
-                    if (downloaded === total) {
-                        setTimeout(() => {
-                            progressBar.classList.remove('active');
-                            statusEl.style.display = 'none';
-                            showToast(`Downloaded all ${total} tiles!`, 'success');
-                        }, 500);
-                    }
-                }, i * 150);
-            });
+            statusEl.style.display = 'block';
+            try {
+                const zip = new JSZip();
+                for (let i = 0; i < chunks.length; i++) {
+                    const chunk = chunks[i];
+                    const blob = await new Promise((resolve, reject) => {
+                        chunk.canvas.toBlob(result => result ? resolve(result) : reject(new Error('Tile encoding failed')), 'image/png');
+                    });
+                    zip.file(chunk.filename, blob);
+                    progressFill.style.width = (50 * (i + 1) / chunks.length) + '%';
+                    statusEl.textContent = 'Preparing tile ' + (i + 1) + ' of ' + chunks.length + '...';
+                }
+                const archive = await zip.generateAsync({type:'blob',compression:'STORE'}, metadata => {
+                    progressFill.style.width = (50 + metadata.percent / 2) + '%';
+                    statusEl.textContent = 'Creating ZIP... ' + Math.round(metadata.percent) + '%';
+                });
+                const url = URL.createObjectURL(archive);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = zipName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+                showToast('Downloaded ' + chunks.length + ' tiles as ' + zipName, 'success');
+            } catch (error) {
+                showToast('ZIP download failed: ' + error.message, 'error');
+            } finally {
+                buttons.forEach(button => button.disabled = false);
+                progressBar.classList.remove('active');
+                progressFill.style.width = '0%';
+                statusEl.style.display = 'none';
+            }
+        }
+
+        function downloadChunkGroup(axis) {
+            const isRow = axis === 'row';
+            const selection = Number(document.getElementById(isRow ? 'export-row-select' : 'export-col-select').value);
+            if (!selection) return;
+            const tiles = currentChunks.filter(chunk => chunk[isRow ? 'row' : 'col'] === selection);
+            downloadChunksZip(tiles, muralId + '_' + (isRow ? 'row' : 'col') + '_' + selection + '.zip');
+        }
+
+        function downloadAllChunks() {
+            downloadChunksZip(currentChunks, muralId + '_all.zip');
         }
 
         // ========== RESET ==========
@@ -2157,6 +2213,7 @@
     </script>
     <nav class="MobileSystemNav" aria-label="Mobile navigation">
         <button type="button" data-mobile-nav="back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" data-mobile-nav="settings" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v2m0 13v2m8.5-8.5h-2m-13 0h-2m15-6.5-1.5 1.5m-10 10-1.5 1.5m13 0-1.5-1.5m-10-10-1.5-1.5"/><circle cx="12" cy="12" r="4"/></svg></button>
         <button type="button" data-mobile-nav="home" aria-label="Home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20H5v-8.5"/><path d="M9.5 20v-5h5v5"/></svg></button>
         <button type="button" data-mobile-nav="apps" aria-label="Opened apps"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3h9a3 3 0 0 1 3 3v9"/></svg></button>
     </nav>
@@ -2170,7 +2227,8 @@
                 const action = button.dataset.mobileNav;
                 if (action === 'back') {
                     if (history.length > 1) history.back(); else window.location.href = '../';
-                } else if (action === 'home') window.location.href = '../';
+                } else if (action === 'settings') toggleSettingsModal(true);
+                else if (action === 'home') window.location.href = '../';
                 else if (action === 'apps') window.location.href = '../#opened-apps';
             });
         })();
